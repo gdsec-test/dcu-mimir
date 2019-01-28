@@ -1,0 +1,19 @@
+---
+apiVersion: "extensions/v1beta1"
+kind: "Ingress"
+metadata:
+  name: "mimir"
+  namespace: "mimir-api-prod"
+spec:
+  tls:
+    - hosts:
+      - "mimir.int.godaddy.com"
+      secretName: tls-mimir
+  rules:
+  - host: "mimir.int.godaddy.com"
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: "mimir"
+          servicePort: 5000
