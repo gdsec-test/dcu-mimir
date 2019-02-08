@@ -1,0 +1,41 @@
+---
+apiVersion: "extensions/v1beta1"
+kind: "Deployment"
+metadata:
+  name: "mimir"
+  namespace: "abuse-api-prod"
+  labels:
+    app: "mimir"
+spec:
+  replicas: 2
+  revisionHistoryLimit: 2
+  template:
+    metadata:
+      labels:
+        app: "mimir"
+    spec:
+      imagePullSecrets:
+        -
+          name: "dcu-artifactory-creds"
+      containers:
+        -
+          name: "mimir"
+          imagePullPolicy: "Always"
+          image: "docker-dcu-local.artifactory.secureserver.net/mimir:REPLACE_WITH_GIT_COMMIT"
+          livenessProbe:
+            httpGet:
+              path: /v1/health
+              port: 5000
+            initialDelaySeconds: 15
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /v1/health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          env:
+          - name: BUILD_DATE
+            value: 'THIS_STRING_IS_REPLACED_DURING_BUILD'
+          - name: sysenv
+            value: prod

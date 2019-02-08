@@ -3,7 +3,7 @@ apiVersion: "extensions/v1beta1"
 kind: "Ingress"
 metadata:
   name: "mimir"
-  namespace: "mimir-api-dev"
+  namespace: "abuse-api-dev"
 spec:
   tls:
     - hosts:

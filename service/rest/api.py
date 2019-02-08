@@ -1,6 +1,7 @@
 import os
 
 from flask_restplus import Namespace, Resource
+
 from settings import config_by_name
 
 settings = config_by_name[os.getenv('sysenv', 'dev')]()

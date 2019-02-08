@@ -9,10 +9,12 @@ git clone git@github.secureserver.net:ITSecurity/mimir.git
 ```
 
 It is recommended that you clone this project into a pyvirtualenv or equivalent virtual environment. For this project, be sure to create a virtual environment with Python 3.6.
-This is achievable via `mkproject --python=/usr/local/bin/python3 mimir`.
+This is achievable via `mkproject --python=/usr/local/bin/python3.6 mimir`.
 
 ## Installing Dependencies
 To install all dependencies for development and testing simply run `make`.
+
+In case the installation for uwsgi fails, run an `apt-get install python3.6-dev` command. uWSCGI is a C application, so you need a C compiler (gcc or clang) and the Python development headers.
 
 ## Building
 Building a local Docker image for the respective development environments can be achieved by

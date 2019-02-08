@@ -3,14 +3,14 @@ apiVersion: "extensions/v1beta1"
 kind: "Ingress"
 metadata:
   name: "mimir"
-  namespace: "mimir-api-prod"
+  namespace: "abuse-api-ote"
 spec:
   tls:
     - hosts:
-      - "mimir.int.godaddy.com"
+      - "mimir.int.ote-godaddy.com"
       secretName: tls-mimir
   rules:
-  - host: "mimir.int.godaddy.com"
+  - host: "mimir.int.ote-godaddy.com"
     http:
       paths:
       - path: /

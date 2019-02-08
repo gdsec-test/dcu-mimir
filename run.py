@@ -1,5 +1,6 @@
 import logging.config
 import os
+
 import yaml
 
 from service.rest import create_app
