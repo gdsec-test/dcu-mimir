@@ -1,15 +1,19 @@
+import service.rest
+from settings import config_by_name
+from mock import patch
+from service.utils.query_helper import QueryHelper
 from flask import url_for
 from flask_testing.utils import TestCase
-from mock import patch
 
-import service.rest
-from service.utils.query_helper import QueryHelper
-from settings import config_by_name
+
+class MockToken:
+    subject = {'cn': 'dcu.zeus.int.test-godaddy.com'}
+    payload = {'groups': ['test_group']}
 
 
 class TestRest(TestCase):
 
-    HEADERS = {'Content-Type': 'application/json'}
+    HEADERS = {'Content-Type': 'application/json', 'Authorization': 'fake_jwt'}
 
     def create_app(self):
         return service.rest.create_app(config_by_name['test']())
@@ -19,8 +23,8 @@ class TestRest(TestCase):
 
     '''Health Endpoint'''
 
-    def test_live_health_endpoint(self):
-        response = self.client.get(url_for('health'), headers=self.HEADERS)
+    def test_live_health_endpoint(self):  
+        response = self.client.get(url_for('health'), headers={'Content-Type': 'application/json'})
         self.assertEqual(response.status_code, 200)
 
     '''Get Infraction by Infraction ID Tests'''
