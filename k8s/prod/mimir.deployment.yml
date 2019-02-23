@@ -39,3 +39,8 @@ spec:
             value: 'THIS_STRING_IS_REPLACED_DURING_BUILD'
           - name: sysenv
             value: prod
+          - name: DB_PASS
+            valueFrom:
+              secretKeyRef:
+                name: db-mimir
+                key: password

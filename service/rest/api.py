@@ -2,7 +2,7 @@ import os
 import logging
 
 from flask import current_app, request
-from flask_restplus import Namespace, Resource, abort
+from flask_restplus import Namespace, Resource, abort, reqparse
 from functools import wraps
 from gd_auth.token import AuthToken
 from settings import config_by_name
@@ -72,12 +72,57 @@ class Health(Resource):
             try:
                 query = query_helper.get_infraction_from_id(infractionId)
             except (KeyError, TypeError, ValueError) as e:
-                abort(422, str(e))
+                abort(422, e)
             except Exception as e:
-                self._logger.warning('Error fetching {}: {}'.format(infractionId, str(e)))
+                self._logger.warning('Error fetching {}: {}'.format(infractionId, e))
                 abort(422, 'Error submitting request')
 
             if not query:
                 abort(404, 'Infraction ID: {} not found'.format(infractionId))
 
             return query, 200
+
+    @api.route('/infractions', endpoint='get_infractions')
+    class GetInfractions(Resource):
+        _logger = logging.getLogger(__name__)
+        parser = reqparse.RequestParser()
+        parser.add_argument('sourceDomainOrIp', type=str, location='args', required=False,
+                            help='Domain or IP address')
+        parser.add_argument('hostingGuid', type=str, location='args', required=False,
+                            help='Hosting account GUID')
+        parser.add_argument('shopperId', type=str, location='args', required=False,
+                            help='Shopper account number')
+        parser.add_argument('infractionType', type=str, location='args', required=False,
+                            help='One of three infraction Types: INTENTIONALLY_MALICIOUS, SUSPENDED, or CUSTOMER_WARNING')
+        parser.add_argument('startDate', type=str, location='args', required=False,
+                            help='Date from which infractions are retrieved. Default 6 months prior to current date. Format: YYYY-MM-DD')
+        parser.add_argument('endDate', type=str, location='args', required=False,
+                            help='Date up to which infractions are retrieved. Default to current date. Format: YYYY-MM-DD')
+
+        @api.expect(parser)
+        @api.response(200, 'OK')
+        @api.response(401, 'Unauthorized')
+        @api.response(403, 'Forbidden')
+        @api.response(404, 'Resource Not Found')
+        @api.response(422, 'Validation Error')
+        def get(self):
+            """
+            Returns a list infractions associated with the supplied infraction data.
+            """
+            tmp_args = self.parser.parse_args()
+
+            # Check the parsed args from tmp_args create a new dict that only includes the k:v pairs where value is NOT None
+            args = {k: v for k, v in tmp_args.items() if v}
+
+            try:
+                query = query_helper.get_infractions(args)
+            except (KeyError, TypeError, ValueError) as e:
+                abort(422, e)
+            except Exception as e:
+                self._logger.warning('Error fetching {}: {}'.format(args, e))
+                abort(422, 'Error submitting request')
+
+            if not query:
+                abort(404, 'Unable to find matching events for {}'.format(args))
+
+            return query

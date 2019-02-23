@@ -21,6 +21,25 @@ class QueryHelper:
             query['createdDate'] = str(query.get('createdDate'))
         return query
 
+    def get_infractions(self, data):
+        """
+        Obtain list of infractions matching provided data dict.
+            Data dict must have at least one of sourceDomainOrIp, hostingGuid, or shopperId.
+            Optional query params to further limit search results are:
+            infractionType: (INTENTIONALLY_MALICIOUS, SUSPENDED, and CUSTOMER_WARNING)
+            startDate: string YYYY-MM-DD Specify date from which infractions are retrieved. Default 6 months prior to current date.
+            endDate: string YYYY-MM-DD Specify date up to which infractions are retrieved. Default to current date.
+        :param data: Dict of infraction fields and values
+        :return: List of infractions
+        """
+        query = self.mongo.get_infractions(data)
+
+        for infraction in query:
+            infraction['infractionId'] = str(infraction.pop('_id'))
+            infraction['createdDate'] = str(infraction.get('createdDate'))
+
+        return query
+
     def count_infractions(self, infraction_data):
         """
         Provide infraction data and get a count of the number of infractions matching that data

@@ -46,3 +46,30 @@ class TestRest(TestCase):
         get_infraction_from_id.side_effect = TypeError()
         response = self.client.get(url_for('get_infraction_id', infractionId='1234'), headers=self.HEADERS)
         self.assertEqual(response.status_code, 422)
+
+    '''Get Infractions Tests'''
+
+    @patch.object(QueryHelper, 'get_infractions')
+    def test_get_matching_infractions(self, get_infractions):
+        data = {'shopperId': '8675309'}
+        get_infractions.return_value = [{'infractionId': '5c5cc2b85f627d8562e7f1f3', 'shopperId': '8675309',
+                                         'ticketId': '1234', 'sourceDomainOrIp': 'abcs.com',
+                                         'hostingGuid': 'abc123-def456-ghi789', 'infractionType': 'CUSTOMER_WARNING',
+                                         'createdDate': '2019-02-07T23:43:52.471Z'}]
+        response = self.client.get(url_for('get_infractions'), headers=self.HEADERS, query_string=data)
+        self.assertEqual(response.status_code, 200)
+
+    @patch.object(QueryHelper, 'get_infractions')
+    def test_get_no_matching_infractions(self, get_infractions):
+        data = {'shopperId': '8675309'}
+        get_infractions.return_value = []
+        response = self.client.get(url_for('get_infractions'), headers=self.HEADERS, query_string=data)
+        self.assertEqual(response.status_code, 404)
+
+    @patch.object(QueryHelper, 'get_infractions')
+    def test_get_no_matching_infractions(self, get_infractions):
+        data = {'infractionType': 'IT_BAD'}
+        get_infractions.side_effect = TypeError()
+        response = self.client.get(url_for('get_infractions'), headers=self.HEADERS, query_string=data)
+        self.assertEqual(response.status_code, 422)
+        
