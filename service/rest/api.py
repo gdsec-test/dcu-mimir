@@ -65,6 +65,8 @@ class Health(Resource):
         @api.response(403, 'Forbidden')
         @api.response(404, 'Resource Not Found')
         @api.response(422, 'Validation Error')
+        @api.doc(security='apikey')
+        @token_required
         def get(self, infractionId):
             """
             Returns information associated with a specific infractionId or a 404 if the id is not found
@@ -105,6 +107,8 @@ class Health(Resource):
         @api.response(403, 'Forbidden')
         @api.response(404, 'Resource Not Found')
         @api.response(422, 'Validation Error')
+        @api.doc(security='apikey')
+        @token_required
         def get(self):
             """
             Returns a list infractions associated with the supplied infraction data.
