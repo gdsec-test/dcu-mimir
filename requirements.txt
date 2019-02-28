@@ -3,3 +3,4 @@ flask_restplus==0.12.1
 pyyaml==3.13
 uwsgi==2.0.17.1
 dcdatabase==1.1
+PyAuth==6.4.0

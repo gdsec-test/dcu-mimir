@@ -1,10 +1,13 @@
-import service.rest
-from settings import config_by_name
-from mock import patch
-from service.utils.query_helper import QueryHelper
+import json
+
 from flask import url_for
-from gd_auth.token import AuthToken
 from flask_testing.utils import TestCase
+from gd_auth.token import AuthToken
+from mock import patch
+
+import service.rest
+from service.utils.query_helper import QueryHelper
+from settings import config_by_name
 
 
 class MockToken:
@@ -24,7 +27,7 @@ class TestRest(TestCase):
 
     '''Health Endpoint'''
 
-    def test_live_health_endpoint(self):  
+    def test_live_health_endpoint(self):
         response = self.client.get(url_for('health'), headers={'Content-Type': 'application/json'})
         self.assertEqual(response.status_code, 200)
 
@@ -51,6 +54,44 @@ class TestRest(TestCase):
         response = self.client.get(url_for('get_infraction_id', infractionId='1234'), headers=self.HEADERS)
         self.assertEqual(response.status_code, 422)
 
+    '''Post New Infraction'''
+
+    @patch.object(AuthToken, 'parse', return_value=MockToken)
+    @patch.object(QueryHelper, 'insert_infraction')
+    def test_insert_new_infraction(self, insert_infraction, parse):
+        insert_infraction.return_value = '12345', False
+        data = {'shopperId': '4388', 'ticketId': '128F', 'sourceDomainOrIp': 'test-domain.com',
+                'hostingGuid': 'abc123-def456-ghv115', 'infractionType': 'CUSTOMER_WARNING'}
+        response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
+        self.assertEqual(response.status_code, 201)
+
+    @patch.object(AuthToken, 'parse', return_value=MockToken)
+    @patch.object(QueryHelper, 'insert_infraction')
+    def test_insert_dupe_infraction(self, insert_infraction, parse):
+        insert_infraction.return_value = '12345', True
+        data = {'shopperId': '4388', 'ticketId': '128F', 'sourceDomainOrIp': 'test-domain.com',
+                'hostingGuid': 'abc123-def456-ghv115', 'infractionType': 'CUSTOMER_WARNING'}
+        response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
+        self.assertEqual(response.status_code, 200)
+
+    @patch.object(AuthToken, 'parse', return_value=MockToken)
+    @patch.object(QueryHelper, 'insert_infraction')
+    def test_insert_infraction_validation_error(self, insert_infraction, parse):
+        insert_infraction.side_effect = TypeError()
+        data = {'shopperId': '4388', 'ticketId': '128F', 'sourceDomainOrIp': 'test-domain.com',
+                'hostingGuid': 'abc123-def456-ghv115', 'infractionType': 'Oops'}
+        response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
+        self.assertEqual(response.status_code, 400)
+
+    @patch.object(AuthToken, 'parse', return_value=MockToken)
+    @patch.object(QueryHelper, 'insert_infraction')
+    def test_insert_infraction_when_required_param_missing(self, insert_infraction, parse):
+        insert_infraction.side_effect = TypeError()
+        data = {'shopperId': '4388', 'ticketId': '128F', 'sourceDomainOrIp': 'test-domain.com',
+                'hostingGuid': 'abc123-def456-ghv115'}
+        response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
+        self.assertEqual(response.status_code, 400)
+
     '''Get Infractions Tests'''
 
     @patch.object(AuthToken, 'parse', return_value=MockToken)
@@ -61,7 +102,7 @@ class TestRest(TestCase):
                                          'ticketId': '1234', 'sourceDomainOrIp': 'abcs.com',
                                          'hostingGuid': 'abc123-def456-ghi789', 'infractionType': 'CUSTOMER_WARNING',
                                          'createdDate': '2019-02-07T23:43:52.471Z'}]
-        response = self.client.get(url_for('get_infractions'), headers=self.HEADERS, query_string=data)
+        response = self.client.get(url_for('infractions'), headers=self.HEADERS, query_string=data)
         self.assertEqual(response.status_code, 200)
 
     @patch.object(AuthToken, 'parse', return_value=MockToken)
@@ -69,14 +110,13 @@ class TestRest(TestCase):
     def test_get_no_matching_infractions(self, get_infractions, parse):
         data = {'shopperId': '8675309'}
         get_infractions.return_value = []
-        response = self.client.get(url_for('get_infractions'), headers=self.HEADERS, query_string=data)
+        response = self.client.get(url_for('infractions'), headers=self.HEADERS, query_string=data)
         self.assertEqual(response.status_code, 404)
 
     @patch.object(AuthToken, 'parse', return_value=MockToken)
     @patch.object(QueryHelper, 'get_infractions')
-    def test_get_no_matching_infractions(self, get_infractions, parse):
+    def test_get_no_matching_infractions_error(self, get_infractions, parse):
         data = {'infractionType': 'IT_BAD'}
         get_infractions.side_effect = TypeError()
-        response = self.client.get(url_for('get_infractions'), headers=self.HEADERS, query_string=data)
+        response = self.client.get(url_for('infractions'), headers=self.HEADERS, query_string=data)
         self.assertEqual(response.status_code, 422)
-        

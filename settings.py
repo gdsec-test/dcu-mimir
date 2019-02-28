@@ -19,7 +19,7 @@ class ProductionAppConfig(AppConfig):
     DB = 'phishstory'
     DB_HOST = '10.22.9.209'
     DB_USER = 'sau_p_phish'
-    
+
     def __init__(self):
         super(ProductionAppConfig, self).__init__()
 
@@ -52,6 +52,7 @@ class TestingConfig(AppConfig):
     DBURL = 'mongodb://localhost/devphishstory'
     DB = 'test'
     COLLECTION = 'test'
+
 
 config_by_name = {'dev': DevelopmentAppConfig,
                   'prod': ProductionAppConfig,

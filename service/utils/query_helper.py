@@ -5,9 +5,19 @@ class QueryHelper:
     """
     This class works with dcdatabase to obtain DCU infraction data
     """
-
     def __init__(self, settings):
         self.mongo = MimirMongo(settings.DBURL, settings.DB, settings.COLLECTION)
+
+    def insert_infraction(self, data):
+        """
+        :param data: Dictionary containing infraction model k/v pairs for insertion into mimir collection
+        :return: event id of new infraction or existing infraction if same data created within 24 hours
+        """
+        duplicate_infraction = self.mongo.get_duplicate_infractions_before_add(**data)
+        if duplicate_infraction:
+            return duplicate_infraction, True
+        else:
+            return self.mongo.add_infraction(data), False
 
     def get_infraction_from_id(self, infractionId):
         """
