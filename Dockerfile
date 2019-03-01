@@ -21,7 +21,7 @@ WORKDIR /tmp
 ADD . /tmp
 
 # pip install private pips staged by Makefile
-RUN for entry in PyAuth; \
+RUN for entry in PyAuth dcdatabase; \
     do \
     pip3 install --compile "/tmp/private_pips/$entry"; \
     done
