@@ -15,7 +15,7 @@ class AppConfig(object):
 
 class ProductionAppConfig(AppConfig):
     TOKEN_AUTHORITY = 'sso.godaddy.com'
-    CN_WHITELIST = {'dcu.zeus.int.prod-godaddy.com'}
+    CN_WHITELIST = {'dcu.zeus.int.godaddy.com'}
     DB = 'phishstory'
     DB_HOST = '10.22.9.209'
     DB_USER = 'sau_p_phish'
