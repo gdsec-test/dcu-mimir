@@ -1,6 +1,8 @@
+import copy
 import logging
 import os
 from functools import wraps
+from urllib.parse import urlencode, urlparse, urlunparse
 
 from flask import current_app, request
 from flask_restplus import Namespace, Resource, abort, fields, reqparse
@@ -98,6 +100,15 @@ class Infractions(Resource):
                         help='Date from which infractions are retrieved. Default 6 months prior to current date. Format: YYYY-MM-DD')
     parser.add_argument('endDate', type=str, location='args', required=False,
                         help='Date up to which infractions are retrieved. Default to current date. Format: YYYY-MM-DD')
+    parser.add_argument('limit', type=int, location='args', required=False,
+                        help='Number of infractions to be retrieved in every get request. This value is defaulted to 25')
+    parser.add_argument('offset', type=int, location='args', required=False,
+                        help='Index of the record from which the next batch of infractions is to be retrieved. This value is defaulted to 0.')
+
+    QUERY_PARAMETERS = 4
+    PATH = 2
+    PAGINATION_LIMIT = 25
+    PAGINATION_OFFSET = 0
 
     @api.expect(infraction_event)
     @api.marshal_with(infraction_result)
@@ -131,31 +142,93 @@ class Infractions(Resource):
     @api.response(200, 'OK')
     @api.response(401, 'Unauthorized')
     @api.response(403, 'Forbidden')
-    @api.response(404, 'Resource Not Found')
     @api.response(422, 'Validation Error')
     @api.doc(security='apikey')
     @token_required
     def get(self):
         """
-        Returns a list infractions associated with the supplied infraction data.
+        Returns a list infractions and the pagination information associated with the supplied infraction data.
         """
         tmp_args = self.parser.parse_args()
 
         # Check the parsed args from tmp_args create a new dict that only includes the k:v pairs where value is NOT None
         args = {k: v for k, v in tmp_args.items() if v}
 
+        """
+        Creating a copy of the query parameters passed in the request as the args dictionary gets modified in
+        the dcdatabase library. For instance parameters like startDate and endDate are popped from the args
+        dictionary in the input validation phase.
+        """
+        input_args = copy.deepcopy(args)
+
+        response_dict = {}
         try:
-            query = query_helper.get_infractions(args)
+            response_dict['infractions'] = query_helper.get_infractions(args)
+            response_dict['pagination'] = self._create_paginated_links(self.api.base_url, self.endpoint, input_args)
+
         except (KeyError, TypeError, ValueError) as e:
             abort(422, e)
         except Exception as e:
             self._logger.warning('Error fetching {}: {}'.format(args, e))
             abort(422, 'Error submitting request')
 
-        if not query:
-            abort(404, 'Unable to find matching events for {}'.format(args))
+        if not response_dict.get('infractions') or \
+                len(response_dict.get('infractions', [])) < input_args.get('limit', self.PAGINATION_LIMIT):
+            response_dict.get('pagination', {}).update({'next': None})
 
-        return query
+        return response_dict
+
+    def _create_paginated_links(self, base_url, endpoint, args):
+        """
+        Method to create paginated links
+        :param base_url: Base url mimir depending on the environment in which it is hosted
+        :param endpoint: Actual endpoint that is currently being accessed
+        :param args: Dictionary of query parameters that are passed in the http request.
+        :return Dictionary of paginated links containing the next and previous url
+        """
+        args.update({'limit': args.get('limit', self.PAGINATION_LIMIT)})
+        offset = args.pop('offset', self.PAGINATION_OFFSET)
+        return {
+            'next': '{}'.format(self._construct_next_url(base_url, endpoint, args, offset)),
+            'prev': '{}'.format(self._construct_prev_url(base_url, endpoint, args, offset))
+        }
+
+    def _construct_next_url(self, base_url, endpoint, args, offset):
+        """
+        Method to construct the next url for pagination based on query parameters.
+        This method uses urlparse method from urllib and breaks the url into 6 parts namely
+        scheme (0), netloc (1), path (2), params= (3), query=(4), and fragment= (5)
+        :param base_url: Base url for mimir depending on the environment in which it is hosted
+        :param endpoint: Actual endpoint that is currently being accessed
+        :param args: Dictionary of query parameters that are passed in the http request.
+        :param offset: Index of the record from which the next batch of infractions is to be retrieved.
+        :return Next url with the appropriate query parameters
+        """
+        args.update({'offset': offset + args.get('limit')})
+        url_parts = list(urlparse(base_url))
+        url_parts[self.PATH] = endpoint
+        url_parts[self.QUERY_PARAMETERS] = urlencode(args)
+        return urlunparse(url_parts)
+
+    def _construct_prev_url(self, base_url, endpoint, args, offset):
+        """
+        Method to construct the previous url for pagination based on query parameters
+        This method uses urlparse method from urllib and breaks the url into 6 parts namely
+        scheme (0), netloc (1), path (2), params= (3), query=(4), and fragment= (5)
+        :param base_url: Base url for mimir depending on the environment in which it is hosted
+        :param endpoint: Actual endpoint that is currently being accessed
+        :param args: Dictionary of query parameters that are passed in the http request.
+        :param offset: Index of the record from which the next batch of infractions is to be retrieved.
+        :return Next url with the appropriate query parameters
+        """
+        args.update({'offset': offset - args.get('limit')})
+        if args.get('offset') < 0:
+            args.update({'offset': 0})
+
+        url_parts = list(urlparse(base_url))
+        url_parts[self.PATH] = endpoint
+        url_parts[self.QUERY_PARAMETERS] = urlencode(args)
+        return urlunparse(url_parts)
 
 
 @api.route('/infractions/<string:infractionId>', endpoint='get_infraction_id')

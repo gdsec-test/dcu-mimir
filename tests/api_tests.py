@@ -111,7 +111,7 @@ class TestRest(TestCase):
         data = {'shopperId': '8675309'}
         get_infractions.return_value = []
         response = self.client.get(url_for('infractions'), headers=self.HEADERS, query_string=data)
-        self.assertEqual(response.status_code, 404)
+        self.assertIsNone(response.json.get('pagination', {}).get('next'))
 
     @patch.object(AuthToken, 'parse', return_value=MockToken)
     @patch.object(QueryHelper, 'get_infractions')
@@ -120,3 +120,42 @@ class TestRest(TestCase):
         get_infractions.side_effect = TypeError()
         response = self.client.get(url_for('infractions'), headers=self.HEADERS, query_string=data)
         self.assertEqual(response.status_code, 422)
+
+    @patch.object(AuthToken, 'parse', return_value=MockToken)
+    @patch.object(QueryHelper, 'get_infractions')
+    def test_get_infraction_count_less_than_limit(self, get_infractions, parse):
+        data = {'shopperId': '8675309'}
+        response = self.client.get(url_for('infractions'), headers=self.HEADERS, query_string=data)
+        self.assertIsNone(response.json.get('pagination', {}).get('next'))
+
+    @patch.object(AuthToken, 'parse', return_value=MockToken)
+    @patch.object(QueryHelper, 'get_infractions')
+    def test_pagination_invalid_prev_url(self, get_infractions, parse):
+        data = {'shopperId': '8675309', 'offset': 0, 'limit': 2}
+        get_infractions.return_value = [
+            {'infractionId': '1', 'shopperId': '8675309', 'ticketId': '1234'},
+            {'infractionId': '2', 'shopperId': '8675309', 'ticketId': '1235'},
+            {'infractionId': '3', 'shopperId': '8675309', 'ticketId': '1236'},
+            {'infractionId': '4', 'shopperId': '8675309', 'ticketId': '1237'}
+        ]
+        response = self.client.get(url_for('infractions'), headers=self.HEADERS, query_string=data)
+        next_url = response.json.get('pagination', {}).get('next')
+        prev_url = response.json.get('pagination', {}).get('prev')
+        self.assertEqual(next_url, 'http://localhost/infractions?shopperId=8675309&limit=2&offset=2')
+        self.assertEqual(prev_url, 'http://localhost/infractions?shopperId=8675309&limit=2&offset=0')
+
+    @patch.object(AuthToken, 'parse', return_value=MockToken)
+    @patch.object(QueryHelper, 'get_infractions')
+    def test_pagination_valid_prev_url(self, get_infractions, parse):
+        data = {'shopperId': '8675309', 'offset': 3, 'limit': 2}
+        get_infractions.return_value = [
+            {'infractionId': '1', 'shopperId': '8675309', 'ticketId': '1234'},
+            {'infractionId': '2', 'shopperId': '8675309', 'ticketId': '1235'},
+            {'infractionId': '3', 'shopperId': '8675309', 'ticketId': '1236'},
+            {'infractionId': '4', 'shopperId': '8675309', 'ticketId': '1237'}
+        ]
+        response = self.client.get(url_for('infractions'), headers=self.HEADERS, query_string=data)
+        next_url = response.json.get('pagination', {}).get('next')
+        prev_url = response.json.get('pagination', {}).get('prev')
+        self.assertEqual(next_url, 'http://localhost/infractions?shopperId=8675309&limit=2&offset=5')
+        self.assertEqual(prev_url, 'http://localhost/infractions?shopperId=8675309&limit=2&offset=1')

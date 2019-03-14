@@ -42,13 +42,14 @@ class QueryHelper:
         :param data: Dict of infraction fields and values
         :return: List of infractions
         """
-        query = self.mongo.get_infractions(data)
 
-        for infraction in query:
+        infractions = self.mongo.get_infractions(data)
+
+        for infraction in infractions:
             infraction['infractionId'] = str(infraction.pop('_id'))
             infraction['createdDate'] = str(infraction.get('createdDate'))
 
-        return query
+        return infractions
 
     def count_infractions(self, infraction_data):
         """
