@@ -41,6 +41,32 @@ infraction_result = api.model(
     }
 )
 
+infraction_id_result = api.inherit(
+    'InfractionIdResult', infraction_event, {
+        'infractionId': fields.String(required=True, description='monotonically increasing request id',
+                                      example='f9c8e07373d4471cac5c4027ac6db034'),
+        'createdDate': fields.String(required=True, description='Creation date of infraction',
+                                     example='2019-02-17 02:29:08.929Z')
+    }
+)
+
+pagination = api.model(
+    'Pagination', {
+        'next': fields.String(required=True, description='Url for the next batch of maching infractions',
+                              example='https://mimir.int.godaddy.com/infractions?sourceDomainOrIp=abcs.com&limit=25&offset=25'),
+        'prev': fields.String(required=True, description='Url for the previous batch of maching infractions',
+                              example='https://mimir.int.godaddy.com/infractions?sourceDomainOrIp=abcs.com&limit=25&offset=0')
+
+    }
+)
+
+infractions_response = api.model(
+    'InfractionsResponse', {
+        'infractions': fields.List(fields.Nested(infraction_id_result), required=True),
+        'pagination': fields.Nested(pagination, required=True)
+    }
+)
+
 
 def token_required(f):
     @wraps(f)
@@ -139,6 +165,7 @@ class Infractions(Resource):
             abort(422, 'Error submitting request')
 
     @api.expect(parser)
+    @api.marshal_with(infractions_response)
     @api.response(200, 'OK')
     @api.response(401, 'Unauthorized')
     @api.response(403, 'Forbidden')
@@ -236,6 +263,7 @@ class GetInfractionId(Resource):
     _logger = logging.getLogger(__name__)
 
     @api.doc(params={'infractionId': 'the unique request id to retrieve information for a specific infraction'})
+    @api.marshal_with(infraction_id_result)
     @api.response(200, 'OK')
     @api.response(401, 'Unauthorized')
     @api.response(403, 'Forbidden')
