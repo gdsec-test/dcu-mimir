@@ -20,7 +20,8 @@ api = Namespace('v1', title='DCU Repeat Infractions API', description='')
 
 infraction_types = ['INTENTIONALLY_MALICIOUS',
                     'SUSPENDED',
-                    'CUSTOMER_WARNING']
+                    'CUSTOMER_WARNING',
+                    'CONTENT_REMOVED']
 
 infraction_event = api.model(
     'InfractionEvent', {
@@ -121,7 +122,7 @@ class Infractions(Resource):
     parser.add_argument('shopperId', type=str, location='args', required=False,
                         help='Shopper account number')
     parser.add_argument('infractionType', type=str, location='args', required=False,
-                        help='One of three infraction Types: INTENTIONALLY_MALICIOUS, SUSPENDED, or CUSTOMER_WARNING')
+                        help='One of four infraction Types: {}'.format(infraction_types))
     parser.add_argument('startDate', type=str, location='args', required=False,
                         help='Date from which infractions are retrieved. Default 6 months prior to current date. Format: YYYY-MM-DD')
     parser.add_argument('endDate', type=str, location='args', required=False,
