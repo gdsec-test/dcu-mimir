@@ -7,6 +7,7 @@ from urllib.parse import urlencode, urlparse, urlunparse
 from flask import current_app, request
 from flask_restplus import Namespace, Resource, abort, fields, reqparse
 from gd_auth.token import AuthToken
+from redlock import RedLockError
 
 from service.utils.query_helper import QueryHelper
 from settings import config_by_name
@@ -158,9 +159,12 @@ class Infractions(Resource):
             infraction_id, duplicate = query_helper.insert_infraction(data)
 
             status = 200 if duplicate else 201
-            return {'infractionId': str(infraction_id)}, status
+            return {'infractionId': str(infraction_id) if infraction_id else ''}, status
         except (KeyError, TypeError, ValueError) as e:
             abort(422, e)
+        except RedLockError as e:
+            self._logger.warning('Error while acquiring the lock {}: {}'.format(data, e))
+            abort(422, 'Error submitting request')
         except Exception as e:
             self._logger.warning('Error submitting {}: {}'.format(data, e))
             abort(422, 'Error submitting request')

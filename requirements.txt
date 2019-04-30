@@ -2,5 +2,6 @@ flask==1.0.2
 flask_restplus==0.12.1
 pyyaml==3.13
 uwsgi==2.0.17.1
-dcdatabase==1.1
-PyAuth==6.6.0
+dcdatabase==1.2
+PyAuth==6.7.0
+redlock==1.2.0

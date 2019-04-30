@@ -44,3 +44,5 @@ spec:
               secretKeyRef:
                 name: db-mimir
                 key: password
+          - name: REDIS
+            value: mimir-redis.abuse-api-prod.svc.cluster.local
