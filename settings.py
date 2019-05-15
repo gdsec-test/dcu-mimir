@@ -7,6 +7,7 @@ class AppConfig(object):
     DB_USER = 'dbuser'
     DB_HOST = 'localhost'
     COLLECTION = 'infractions'
+    AUTH_GROUPS = {'DCU-Phishstory'}
 
     def __init__(self):
         self.DB_PASS = urllib.parse.quote(os.getenv('DB_PASS', 'password'))

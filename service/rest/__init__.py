@@ -25,5 +25,6 @@ def create_app(config):
     )
     app.config['token_authority'] = config.TOKEN_AUTHORITY
     app.config['cn_whitelist'] = config.CN_WHITELIST
+    app.config['auth_groups'] = config.AUTH_GROUPS
     api.add_namespace(ns1)
     return app

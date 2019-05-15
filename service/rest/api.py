@@ -73,7 +73,11 @@ infractions_response = api.model(
 def token_required(f):
     @wraps(f)
     def wrapped(*args, **kwargs):
+        forbidden = {'message': 'Authenticated user is not allowed access'}, 403
+
+        auth_groups = current_app.config.get('auth_groups')
         cn_whitelist = current_app.config.get('cn_whitelist')
+
         token_authority = current_app.config.get('token_authority')
 
         if not token_authority:  # bypass if no token authority is set
@@ -88,15 +92,26 @@ def token_required(f):
 
         try:
             token = token.encode() if isinstance(token, str) else token
-            auth_token = AuthToken.parse(token, token_authority, 'cert')
-            jwt_common_name = auth_token.subject.get('cn')
-            if jwt_common_name not in cn_whitelist:
-                return {'message': 'Authenticated user is not allowed access'}, 403
+
+            # Parse the payload without validating, and then parse and validate with the appropriate type
+            payload = AuthToken.payload(token)
+            typ = payload.get('typ')
+            parsed = AuthToken.parse(token, token_authority, typ)
+
+            if typ == 'jomax':
+                approved_groups = set(parsed.payload.get('groups', []))
+                if not approved_groups.intersection(auth_groups):
+                    return forbidden
+            elif typ == 'cert':
+                if parsed.subject.get('cn') not in cn_whitelist:
+                    return forbidden
+            else:
+                return forbidden
+
         except Exception:
             return {'message': 'Authentication not sent or invalid'}, 401
 
         return f(*args, **kwargs)
-
     return wrapped
 
 
