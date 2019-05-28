@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_restplus import Api
 from .api import api as ns1
+from flask_cors import CORS
 
 
 def create_app(config):
@@ -27,4 +28,6 @@ def create_app(config):
     app.config['cn_whitelist'] = config.CN_WHITELIST
     app.config['auth_groups'] = config.AUTH_GROUPS
     api.add_namespace(ns1)
+    CORS(app, origins=['http://localhost:5000', 'http://127.0.0.1:5000', r'^https.*(-|\.)godaddy.com.*$'],
+         supports_credentials=True)
     return app

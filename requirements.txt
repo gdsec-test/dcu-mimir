@@ -5,3 +5,4 @@ uwsgi==2.0.17.1
 dcdatabase==1.2
 PyAuth==6.7.0
 redlock==1.2.0
+flask-cors==3.0.7

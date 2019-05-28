@@ -83,7 +83,7 @@ def token_required(f):
         if not token_authority:  # bypass if no token authority is set
             return f(*args, **kwargs)
 
-        token = request.headers.get('Authorization', '').strip()
+        token = request.headers.get('Authorization', '').strip() or request.cookies.get('auth_jomax')
         if not token:
             return {'message': 'Authorization header not provided'}, 401
 
