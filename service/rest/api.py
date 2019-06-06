@@ -22,6 +22,8 @@ api = Namespace('v1', title='DCU Repeat Infractions API', description='')
 infraction_types = ['INTENTIONALLY_MALICIOUS',
                     'SUSPENDED',
                     'CUSTOMER_WARNING',
+                    'REPEAT_OFFENDER',
+                    'EXTENSIVE_COMPROMISE',
                     'CONTENT_REMOVED']
 
 infraction_event = api.model(

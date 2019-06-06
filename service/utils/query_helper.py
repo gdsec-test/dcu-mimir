@@ -61,7 +61,7 @@ class QueryHelper:
         Obtain list of infractions matching provided data dict.
             Data dict must have at least one of sourceDomainOrIp, hostingGuid, or shopperId.
             Optional query params to further limit search results are:
-            infractionType: (INTENTIONALLY_MALICIOUS, SUSPENDED, CUSTOMER_WARNING, and CONTENT_REMOVED)
+            infractionType: (INTENTIONALLY_MALICIOUS, SUSPENDED, CUSTOMER_WARNING, REPEAT_OFFENDER, EXTENSIVE_COMPROMISE, and CONTENT_REMOVED)
             startDate: string YYYY-MM-DD Specify date from which infractions are retrieved. Default 6 months prior to current date.
             endDate: string YYYY-MM-DD Specify date up to which infractions are retrieved. Default to current date.
         :param data: Dict of infraction fields and values
