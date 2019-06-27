@@ -98,7 +98,7 @@ def token_required(f):
             # Parse the payload without validating, and then parse and validate with the appropriate type
             payload = AuthToken.payload(token)
             typ = payload.get('typ')
-            parsed = AuthToken.parse(token, token_authority, typ)
+            parsed = AuthToken.parse(token, token_authority, 'Mimir', typ)
 
             if typ == 'jomax':
                 approved_groups = set(parsed.payload.get('groups', []))
