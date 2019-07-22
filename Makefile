@@ -1,4 +1,4 @@
-REPONAME=infosec-dcu/mimir
+REPONAME=digital-crimes/mimir
 BUILDROOT=$(HOME)/dockerbuild/$(REPONAME)
 DOCKERREPO=docker-dcu-local.artifactory.secureserver.net/mimir
 SHELL=/bin/bash

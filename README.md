@@ -5,7 +5,7 @@ The immediate goal of this project is to provide a good way to track and enforce
 ## Cloning
 To clone the repository via SSH perform the following
 ```
-git clone git@github.secureserver.net:ITSecurity/mimir.git
+git clone git@github.secureserver.net:digital-crimes/mimir.git
 ```
 
 It is recommended that you clone this project into a pyvirtualenv or equivalent virtual environment. For this project, be sure to create a virtual environment with Python 3.6.

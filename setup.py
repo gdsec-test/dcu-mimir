@@ -16,7 +16,7 @@ setup(
     author_email='dcueng@godaddy.com',
     description='Provides repeat infractions tracker for Phishnet investigations',
     long_description=long_description,
-    url='https://github.secureserver.net/ITSecurity/mimir',
+    url='https://github.secureserver.net/digital-crimes/mimir',
     packages=find_packages(exclude=['tests']),
     install_requires=install_reqs,
     tests_require=testing_reqs,
