@@ -9,7 +9,7 @@ BUILD_BRANCH=origin/master
 # libraries we need to stage for pip to install inside Docker build
 
 PRIVATE_PIPS="git@github.secureserver.net:auth-contrib/PyAuth.git" \
-git@github.secureserver.net:ITSecurity/dcdatabase.git
+git@github.secureserver.net:digital-crimes/dcdatabase.git
 
 .PHONY: prep flake8 isort tools test testcov dev stage prod ote clean prod-deploy ote-deploy dev-deploy
 
