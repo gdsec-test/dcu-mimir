@@ -34,7 +34,7 @@ EXPOSE 5000
 
 # Move files to new dir
 RUN mkdir -p /app
-COPY ./*.ini ./*.py ./logging.yml ./runserver.sh /app/
+COPY ./*.ini ./*.py ./logging.yaml ./runserver.sh /app/
 RUN chown -R dcu:dcu /app
 
 # cleanup
