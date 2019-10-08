@@ -85,12 +85,12 @@ dev: prep
 prod-deploy: prod
 	@echo "----- deploying $(REPONAME) prod -----"
 	docker push $(DOCKERREPO):$(COMMIT)
-	kubectl --context prod apply -f $(BUILDROOT)/k8s/prod/mimir.deployment.yaml --record
+	kubectl --context prod-dcu apply -f $(BUILDROOT)/k8s/prod/mimir.deployment.yaml --record
 
 ote-deploy: ote
 	@echo "----- deploying $(REPONAME) ote -----"
 	docker push $(DOCKERREPO):ote
-	kubectl --context ote apply -f $(BUILDROOT)/k8s/ote/mimir.deployment.yaml --record
+	kubectl --context ote-dcu apply -f $(BUILDROOT)/k8s/ote/mimir.deployment.yaml --record
 
 dev-deploy: dev
 	@echo "----- deploying $(REPONAME) dev -----"
