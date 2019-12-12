@@ -24,7 +24,8 @@ infraction_types = ['INTENTIONALLY_MALICIOUS',
                     'CUSTOMER_WARNING',
                     'REPEAT_OFFENDER',
                     'EXTENSIVE_COMPROMISE',
-                    'CONTENT_REMOVED']
+                    'CONTENT_REMOVED',
+                    'SHOPPER_COMPROMISE']
 
 infraction_event = api.model(
     'InfractionEvent', {
@@ -140,7 +141,7 @@ class Infractions(Resource):
     parser.add_argument('shopperId', type=str, location='args', required=False,
                         help='Shopper account number')
     parser.add_argument('infractionType', type=str, location='args', required=False,
-                        help='One of four infraction Types: {}'.format(infraction_types))
+                        help='One of {} infraction Types: {}'.format(len(infraction_types), infraction_types))
     parser.add_argument('startDate', type=str, location='args', required=False,
                         help='Date from which infractions are retrieved. Default 6 months prior to current date. Format: YYYY-MM-DD')
     parser.add_argument('endDate', type=str, location='args', required=False,
