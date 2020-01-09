@@ -25,7 +25,8 @@ infraction_types = ['INTENTIONALLY_MALICIOUS',
                     'REPEAT_OFFENDER',
                     'EXTENSIVE_COMPROMISE',
                     'CONTENT_REMOVED',
-                    'SHOPPER_COMPROMISE']
+                    'SHOPPER_COMPROMISE',
+                    'MALWARE_SCANNER_NOTICE']
 
 infraction_event = api.model(
     'InfractionEvent', {
