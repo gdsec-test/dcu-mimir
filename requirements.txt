@@ -6,3 +6,4 @@ dcdatabase==1.2
 PyAuth==7.1.1
 redlock==1.2.0
 flask-cors==3.0.7
+Werkzeug==0.14.1
