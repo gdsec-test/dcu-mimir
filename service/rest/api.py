@@ -4,8 +4,8 @@ import os
 from functools import wraps
 from urllib.parse import urlencode, urlparse, urlunparse
 
-from flask import current_app, request
-from flask_restplus import Namespace, Resource, abort, fields, reqparse
+from flask import abort, current_app, request
+from flask_restplus import Namespace, Resource, fields, reqparse
 from gd_auth.token import AuthToken
 from redlock import RedLockError
 
