@@ -26,14 +26,12 @@ spec:
           imagePullPolicy: "Always"
           image: "docker-dcu-local.artifactory.secureserver.net/mimir:ote"
           livenessProbe:
-            httpGet:
-              path: /v1/health
+            tcpSocket:
               port: 5000
             initialDelaySeconds: 15
             periodSeconds: 15
           readinessProbe:
-            httpGet:
-              path: /v1/health
+            tcpSocket:
               port: 5000
             initialDelaySeconds: 10
             periodSeconds: 15
