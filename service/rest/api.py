@@ -27,6 +27,7 @@ infraction_types = ['INTENTIONALLY_MALICIOUS',
                     'CONTENT_REMOVED',
                     'SHOPPER_COMPROMISE',
                     'MALWARE_SCANNER_NOTICE',
+                    'MANUAL_NOTE',
                     'USERGEN_WARNING',
                     'NCMEC_REPORT_SUBMITTED']
 
@@ -40,6 +41,8 @@ infraction_event = api.model(
                                      example='testguid-test-guid-test-guidtest1234'),
         'shopperId': fields.String(required=True, description='shopper account associated with the infraction',
                                    example='abc123'),
+        'note': fields.String(required=False, description='note associated with the infraction',
+                                   example='ticket sent to ncmec')
     })
 
 infraction_result = api.model(
@@ -153,6 +156,8 @@ class Infractions(Resource):
                         help='Number of infractions to be retrieved in every get request. This value is defaulted to 25')
     parser.add_argument('offset', type=int, location='args', required=False,
                         help='Index of the record from which the next batch of infractions is to be retrieved. This value is defaulted to 0.')
+    parser.add_argument('note', type=str, location='args', required=False,
+                        help='Any note associated with the infraction')
 
     QUERY_PARAMETERS = 4
     PATH = 2
@@ -219,8 +224,6 @@ class Infractions(Resource):
             response_dict['infractions'] = query_helper.get_infractions(args)
             response_dict['pagination'] = self._create_paginated_links(self.api.base_url, self.endpoint, input_args)
 
-        except (KeyError, TypeError, ValueError) as e:
-            abort(422, e)
         except Exception as e:
             self._logger.warning('Error fetching {}: {}'.format(args, e))
             abort(422, 'Error submitting request')
@@ -303,8 +306,7 @@ class GetInfractionId(Resource):
         """
         try:
             query = query_helper.get_infraction_from_id(infractionId)
-        except (KeyError, TypeError, ValueError) as e:
-            abort(422, e)
+
         except Exception as e:
             self._logger.warning('Error fetching {}: {}'.format(infractionId, e))
             abort(422, 'Error submitting request')

@@ -124,6 +124,16 @@ class TestRest(TestCase):
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 400)
 
+    @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(QueryHelper, 'insert_infraction')
+    def test_insert_infraction_with_note(self, insert_infraction, parse, payload):
+        insert_infraction.return_value = '12346', False
+        data = {'shopperId': '4388', 'ticketId': '128F', 'sourceDomainOrIp': 'test-domain.com',
+                'hostingGuid': 'abc123-def456-ghv115', 'infractionType': 'CUSTOMER_WARNING', 'note': 'manual note'}
+        response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
+        self.assertEqual(response.status_code, 201)
+
     '''Get Infractions Tests'''
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
