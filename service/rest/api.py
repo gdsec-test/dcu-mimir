@@ -26,7 +26,9 @@ infraction_types = ['INTENTIONALLY_MALICIOUS',
                     'EXTENSIVE_COMPROMISE',
                     'CONTENT_REMOVED',
                     'SHOPPER_COMPROMISE',
-                    'MALWARE_SCANNER_NOTICE']
+                    'MALWARE_SCANNER_NOTICE',
+                    'USERGEN_WARNING',
+                    'NCMEC_REPORT_SUBMITTED']
 
 infraction_event = api.model(
     'InfractionEvent', {
