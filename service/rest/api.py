@@ -42,7 +42,9 @@ infraction_event = api.model(
         'shopperId': fields.String(required=True, description='shopper account associated with the infraction',
                                    example='abc123'),
         'note': fields.String(required=False, description='note associated with the infraction',
-                                   example='ticket sent to ncmec')
+                              example='ticket sent to ncmec'),
+        'ncmecReportID': fields.String(required=False, description='ncmecReportID associated with the NCMEC_REPORT_SUBMITTED infraction',
+                                       example='1234')
     })
 
 infraction_result = api.model(
@@ -158,6 +160,8 @@ class Infractions(Resource):
                         help='Index of the record from which the next batch of infractions is to be retrieved. This value is defaulted to 0.')
     parser.add_argument('note', type=str, location='args', required=False,
                         help='Any note associated with the infraction')
+    parser.add_argument('ncmecReportID', type=str, location='args', required=False,
+                        help='ncmecReportID associated with NCMEC Report submission')
 
     QUERY_PARAMETERS = 4
     PATH = 2
