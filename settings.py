@@ -16,7 +16,7 @@ class AppConfig(object):
 
 class ProductionAppConfig(AppConfig):
     TOKEN_AUTHORITY = 'sso.godaddy.com'
-    CN_WHITELIST = {'dcu.zeus.int.godaddy.com', 'godaddy-service.int.godaddy.com'}
+    CN_WHITELIST = {'dcu.zeus.int.godaddy.com', 'godaddy-service.int.godaddy.com', 'kelvin.int.godaddy.com'}
     DB = 'phishstory'
     DB_HOST = '10.22.9.209'
     DB_USER = 'sau_p_phish'
@@ -27,7 +27,7 @@ class ProductionAppConfig(AppConfig):
 
 class OTEAppConfig(AppConfig):
     TOKEN_AUTHORITY = 'sso.ote-godaddy.com'
-    CN_WHITELIST = {'dcu.zeus.int.ote-godaddy.com', 'godaddy-service.int.ote-godaddy.com'}
+    CN_WHITELIST = {'dcu.zeus.int.ote-godaddy.com', 'godaddy-service.int.ote-godaddy.com', 'kelvin.int.ote-godaddy.com'}
     DB = 'otephishstory'
     DB_HOST = '10.22.9.209'
     DB_USER = 'sau_o_phish'
@@ -38,7 +38,7 @@ class OTEAppConfig(AppConfig):
 
 class DevelopmentAppConfig(AppConfig):
     TOKEN_AUTHORITY = 'sso.dev-godaddy.com'
-    CN_WHITELIST = {'dcu.zeus.int.dev-godaddy.com', 'godaddy-service.int.dev-godaddy.com'}
+    CN_WHITELIST = {'dcu.zeus.int.dev-godaddy.com', 'godaddy-service.int.dev-godaddy.com', 'kelvin.int.dev-godaddy.com'}
     DB = 'devphishstory'
     DB_HOST = '10.22.188.208'
     DB_USER = 'devuser'
