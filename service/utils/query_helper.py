@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from dcdatabase.mimir.mongo import MimirMongo
 
 from service.utils.lock import Lock
@@ -30,7 +32,15 @@ class QueryHelper:
         return ','.join([domain, shopper_id, hosting_guid, infraction_type])
 
     def _check_duplicate_and_persist(self, data):
-        duplicate_infraction = self.mongo.get_duplicate_infractions_before_add(**data)
+        infraction_query = deepcopy(data)
+
+        # Popping infractionType from the post request and replacing with a list of infractionTypes
+        # as the get infractions requires an infractionTypes key.
+        infraction_type = infraction_query.pop('infractionType', '')
+        if infraction_type:
+            infraction_query['infractionTypes'] = [infraction_type]
+
+        duplicate_infraction = self.mongo.get_duplicate_infractions_before_add(infraction_query)
         if duplicate_infraction:
             return duplicate_infraction, True
         else:
