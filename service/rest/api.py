@@ -191,12 +191,13 @@ class Infractions(Resource):
             status = 200 if duplicate else 201
             return {'infractionId': str(infraction_id) if infraction_id else ''}, status
         except (KeyError, TypeError, ValueError) as e:
+            self._logger.error('Validation error {}: {}'.format(data, e))
             abort(422, e)
         except RedLockError as e:
-            self._logger.warning('Error while acquiring the lock {}: {}'.format(data, e))
+            self._logger.error('Error while acquiring the lock {}: {}'.format(data, e))
             abort(422, 'Error submitting request')
         except Exception as e:
-            self._logger.warning('Error submitting {}: {}'.format(data, e))
+            self._logger.error('Error submitting {}: {}'.format(data, e))
             abort(422, 'Error submitting request')
 
     @api.expect(parser)
