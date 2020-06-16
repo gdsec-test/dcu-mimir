@@ -31,6 +31,16 @@ infraction_types = ['INTENTIONALLY_MALICIOUS',
                     'USERGEN_WARNING',
                     'NCMEC_REPORT_SUBMITTED']
 
+abuse_types = ['A_RECORD',
+               'CHILD_ABUSE',
+               'CONTENT',
+               'FRAUD_WIRE',
+               'IP_BLOCK',
+               'MALWARE',
+               'NETWORK_ABUSE',
+               'PHISHING',
+               'SPAM']
+
 infraction_event = api.model(
     'InfractionEvent', {
         'infractionType': fields.String(required=True, description='the infraction type', enum=infraction_types),
@@ -44,7 +54,8 @@ infraction_event = api.model(
         'note': fields.String(required=False, description='note associated with the infraction',
                               example='ticket sent to ncmec'),
         'ncmecReportID': fields.String(required=False, description='ncmecReportID associated with the NCMEC_REPORT_SUBMITTED infraction',
-                                       example='1234')
+                                       example='1234'),
+        'abuseType': fields.String(required=False, description='the abuse type', enum=abuse_types)
     })
 
 infraction_result = api.model(
@@ -149,7 +160,9 @@ class Infractions(Resource):
     parser.add_argument('shopperId', type=str, location='args', required=False,
                         help='Shopper account number')
     parser.add_argument('infractionTypes', type=str, location='args', required=False, action='append',
-                        help='List containing zero or more of {} infraction Types: {}'.format(len(infraction_types), infraction_types))
+                        help='List containing zero or more of {} infraction types: {}'.format(len(infraction_types), infraction_types))
+    parser.add_argument('abuseTypes', type=str, location='args', required=False, action='append',
+                        help='List containing zero or more of {} abuse types: {}'.format(len(abuse_types), abuse_types))
     parser.add_argument('startDate', type=str, location='args', required=False,
                         help='Date from which infractions are retrieved. Default 6 months prior to current date. Format: YYYY-MM-DD')
     parser.add_argument('endDate', type=str, location='args', required=False,

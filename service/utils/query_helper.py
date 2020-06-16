@@ -40,6 +40,12 @@ class QueryHelper:
         if infraction_type:
             infraction_query['infractionTypes'] = [infraction_type]
 
+        # Popping abuseType from the post request and replacing with a list of abuseTypes
+        # as the get infractions requires an abuseTypes key.
+        abuse_type = infraction_query.pop('abuseType', '')
+        if abuse_type:
+            infraction_query['abuseTypes'] = [abuse_type]
+
         duplicate_infraction = self.mongo.get_duplicate_infractions_before_add(infraction_query)
         if duplicate_infraction:
             return duplicate_infraction, True
