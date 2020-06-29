@@ -29,7 +29,8 @@ class QueryHelper:
         domain = infraction.get('sourceDomainOrIp') if infraction.get('sourceDomainOrIp') else ''
         shopper_id = infraction.get('shopperId') if infraction.get('shopperId') else ''
         hosting_guid = infraction.get('hostingGuid') if infraction.get('hostingGuid') else ''
-        return ','.join([domain, shopper_id, hosting_guid, infraction_type])
+        abuse_type = infraction.get('abuseType') if infraction.get('abuseType') else ''
+        return ','.join([domain, shopper_id, hosting_guid, infraction_type, abuse_type])
 
     def _check_duplicate_and_persist(self, data):
         infraction_query = deepcopy(data)

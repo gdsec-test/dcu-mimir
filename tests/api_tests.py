@@ -49,6 +49,8 @@ class TestRest(TestCase):
     CUSTOMER_WARNING = 'CUSTOMER_WARNING'
     TEST_DOMAIN = 'test-domain.com'
     GUID1 = 'abc123-def456-ghv115'
+    PHISHING = 'PHISHING'
+    CHILD_ABUSE = 'CHILD_ABUSE'
 
     def create_app(self):
         return service.rest.create_app(config_by_name['test']())
@@ -96,7 +98,7 @@ class TestRest(TestCase):
     def test_insert_new_infraction(self, insert_infraction, parse, payload):
         insert_infraction.return_value = '12345', False
         data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '133F', 'sourceDomainOrIp': self.TEST_DOMAIN,
-                'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING}
+                'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING, 'abuseType': self.PHISHING}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 201)
 
@@ -106,7 +108,7 @@ class TestRest(TestCase):
     def test_insert_dupe_infraction(self, insert_infraction, parse, payload):
         insert_infraction.return_value = '12345', True
         data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '129F', 'sourceDomainOrIp': self.TEST_DOMAIN,
-                'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING}
+                'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING, 'abuseType': self.PHISHING}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 200)
 
@@ -136,7 +138,8 @@ class TestRest(TestCase):
     def test_insert_infraction_with_note(self, insert_infraction, parse, payload):
         insert_infraction.return_value = '12346', False
         data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '132F', 'sourceDomainOrIp': self.TEST_DOMAIN,
-                'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING, 'note': 'manual note'}
+                'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING, 'note': 'manual note',
+                'abuseType': self.PHISHING}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 201)
 
@@ -146,7 +149,8 @@ class TestRest(TestCase):
     def test_insert_new_csam_infraction(self, insert_infraction, parse, payload):
         insert_infraction.return_value = '12345', False
         data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '128F', 'sourceDomainOrIp': 'test-csam-domain.com',
-                'hostingGuid': self.GUID1, 'infractionType': 'NCMEC_REPORT_SUBMITTED'}
+                'hostingGuid': self.GUID1, 'infractionType': 'NCMEC_REPORT_SUBMITTED',
+                'abuseType': self.CHILD_ABUSE}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 201)
 

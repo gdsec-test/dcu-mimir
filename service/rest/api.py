@@ -55,7 +55,7 @@ infraction_event = api.model(
                               example='ticket sent to ncmec'),
         'ncmecReportID': fields.String(required=False, description='ncmecReportID associated with the NCMEC_REPORT_SUBMITTED infraction',
                                        example='1234'),
-        'abuseType': fields.String(required=False, description='the abuse type', enum=abuse_types)
+        'abuseType': fields.String(required=True, description='the abuse type', enum=abuse_types)
     })
 
 infraction_result = api.model(
