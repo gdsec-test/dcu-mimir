@@ -44,7 +44,7 @@ abuse_types = ['A_RECORD',
 infraction_event = api.model(
     'InfractionEvent', {
         'infractionType': fields.String(required=True, description='the infraction type', enum=infraction_types),
-        'ticketId': fields.String(require=True, description='ticket or incident associated with the infraction'),
+        'ticketId': fields.String(require=False, description='ticket or incident associated with the infraction'),
         'sourceDomainOrIp': fields.String(required=True, description='domain associated with the infraction',
                                           example='godaddy.com'),
         'hostingGuid': fields.String(required=True, description='hosting guid associated with the infraction',

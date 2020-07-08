@@ -146,6 +146,17 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
     @patch.object(QueryHelper, 'insert_infraction')
+    def test_insert_infraction_with_note_no_ticket_id(self, insert_infraction, parse, payload):
+        insert_infraction.return_value = '12346', False
+        data = {'shopperId': self.SHOPPER_ID2, 'sourceDomainOrIp': self.TEST_DOMAIN,
+                'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING, 'note': 'manual note',
+                'abuseType': self.PHISHING}
+        response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
+        self.assertEqual(response.status_code, 201)
+
+    @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(QueryHelper, 'insert_infraction')
     def test_insert_new_csam_infraction(self, insert_infraction, parse, payload):
         insert_infraction.return_value = '12345', False
         data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '128F', 'sourceDomainOrIp': 'test-csam-domain.com',
