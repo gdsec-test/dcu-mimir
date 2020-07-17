@@ -51,6 +51,8 @@ class TestRest(TestCase):
     GUID1 = 'abc123-def456-ghv115'
     PHISHING = 'PHISHING'
     CHILD_ABUSE = 'CHILD_ABUSE'
+    HOSTED = 'HOSTED'
+    REGISTERED = 'REGISTERED'
 
     def create_app(self):
         return service.rest.create_app(config_by_name['test']())
@@ -95,10 +97,22 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
     @patch.object(QueryHelper, 'insert_infraction')
-    def test_insert_new_infraction(self, insert_infraction, parse, payload):
+    def test_insert_new_hosted_infraction(self, insert_infraction, parse, payload):
         insert_infraction.return_value = '12345', False
         data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '133F', 'sourceDomainOrIp': self.TEST_DOMAIN,
-                'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING, 'abuseType': self.PHISHING}
+                'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING,
+                'abuseType': self.PHISHING}
+        response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
+        self.assertEqual(response.status_code, 201)
+
+    @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(QueryHelper, 'insert_infraction')
+    def test_insert_new_reg_infraction(self, insert_infraction, parse, payload):
+        insert_infraction.return_value = '12345', False
+        data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '128F', 'sourceDomainOrIp': self.TEST_DOMAIN,
+                'hostedStatus': self.REGISTERED, 'domainId': '1234', 'infractionType': self.CUSTOMER_WARNING,
+                'abuseType': self.PHISHING}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 201)
 
@@ -108,7 +122,8 @@ class TestRest(TestCase):
     def test_insert_dupe_infraction(self, insert_infraction, parse, payload):
         insert_infraction.return_value = '12345', True
         data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '129F', 'sourceDomainOrIp': self.TEST_DOMAIN,
-                'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING, 'abuseType': self.PHISHING}
+                'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING,
+                'abuseType': self.PHISHING}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 200)
 
@@ -118,7 +133,7 @@ class TestRest(TestCase):
     def test_insert_infraction_validation_error(self, insert_infraction, parse, payload):
         insert_infraction.side_effect = TypeError()
         data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '130F', 'sourceDomainOrIp': self.TEST_DOMAIN,
-                'hostingGuid': self.GUID1, 'infractionType': 'Oops'}
+                'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1, 'infractionType': 'Oops'}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 400)
 
@@ -128,7 +143,7 @@ class TestRest(TestCase):
     def test_insert_infraction_when_required_param_missing(self, insert_infraction, parse, payload):
         insert_infraction.side_effect = TypeError()
         data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '131F', 'sourceDomainOrIp': self.TEST_DOMAIN,
-                'hostingGuid': self.GUID1}
+                'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 400)
 
@@ -138,8 +153,8 @@ class TestRest(TestCase):
     def test_insert_infraction_with_note(self, insert_infraction, parse, payload):
         insert_infraction.return_value = '12346', False
         data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '132F', 'sourceDomainOrIp': self.TEST_DOMAIN,
-                'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING, 'note': 'manual note',
-                'abuseType': self.PHISHING}
+                'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING,
+                'note': 'manual note', 'abuseType': self.PHISHING}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 201)
 
@@ -148,7 +163,7 @@ class TestRest(TestCase):
     @patch.object(QueryHelper, 'insert_infraction')
     def test_insert_infraction_with_note_no_ticket_id(self, insert_infraction, parse, payload):
         insert_infraction.return_value = '12346', False
-        data = {'shopperId': self.SHOPPER_ID2, 'sourceDomainOrIp': self.TEST_DOMAIN,
+        data = {'shopperId': self.SHOPPER_ID2, 'sourceDomainOrIp': self.TEST_DOMAIN, 'hostedStatus': self.HOSTED,
                 'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING, 'note': 'manual note',
                 'abuseType': self.PHISHING}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
@@ -160,7 +175,7 @@ class TestRest(TestCase):
     def test_insert_new_csam_infraction(self, insert_infraction, parse, payload):
         insert_infraction.return_value = '12345', False
         data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '128F', 'sourceDomainOrIp': 'test-csam-domain.com',
-                'hostingGuid': self.GUID1, 'infractionType': 'NCMEC_REPORT_SUBMITTED',
+                'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1, 'infractionType': 'NCMEC_REPORT_SUBMITTED',
                 'abuseType': self.CHILD_ABUSE}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 201)
@@ -170,9 +185,9 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
     @patch.object(QueryHelper, 'get_infractions')
-    def test_get_matching_infractions(self, get_infractions, parse, payload):
+    def test_get_matching_hosted_infractions(self, get_infractions, parse, payload):
         data = {'shopperId': self.SHOPPER_ID1}
-        get_infractions.return_value = [{'infractionId': '5c5cc2b85f627d8562e7f1f3', 'shopperId': '8675309',
+        get_infractions.return_value = [{'infractionId': '5c5cc2b85f627d8562e7f1f3', 'shopperId': self.SHOPPER_ID1,
                                          'ticketId': '1234', 'sourceDomainOrIp': 'abcs.com',
                                          'hostingGuid': 'abc123-def456-ghi789', 'infractionType': self.CUSTOMER_WARNING,
                                          'createdDate': '2019-02-07T23:43:52.471Z'}]
@@ -192,7 +207,18 @@ class TestRest(TestCase):
                                          'ticketId': '1235', 'sourceDomainOrIp': 'abcs12.com',
                                          'hostingGuid': 'abc123-def456-ghi789', 'infractionType': self.SUSPENDED,
                                          'createdDate': '2019-03-07T23:43:52.471Z'}]
+        response = self.client.get(url_for('infractions'), headers=self.HEADERS, query_string=data)
+        self.assertEqual(response.status_code, 200)
 
+    @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(QueryHelper, 'get_infractions')
+    def test_get_matching_reg_infractions(self, get_infractions, parse, payload):
+        data = {'shopperId': self.SHOPPER_ID1, 'hostedStatus': self.REGISTERED}
+        get_infractions.return_value = [{'infractionId': '5c5cc2b85f627d8562e7f1f3', 'shopperId': self.SHOPPER_ID1,
+                                         'ticketId': '1234', 'sourceDomainOrIp': 'abcs.com',
+                                         'domainId': '12345', 'infractionType': 'CUSTOMER_WARNING',
+                                         'createdDate': '2019-02-07T23:43:52.471Z'}]
         response = self.client.get(url_for('infractions'), headers=self.HEADERS, query_string=data)
         self.assertEqual(response.status_code, 200)
 

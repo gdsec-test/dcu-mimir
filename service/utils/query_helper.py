@@ -19,18 +19,26 @@ class QueryHelper:
     def __init__(self, settings):
         self.mongo = MimirMongo(settings.DBURL, settings.DB, settings.COLLECTION)
 
-    def _create_composite_key(self, infraction):
+    @staticmethod
+    def _create_composite_key(infraction):
         """
         Creates a composite key.
         :param infraction:
         :return composite key:
         """
-        infraction_type = infraction.get('infractionType') if infraction.get('infractionType') else ''
-        domain = infraction.get('sourceDomainOrIp') if infraction.get('sourceDomainOrIp') else ''
-        shopper_id = infraction.get('shopperId') if infraction.get('shopperId') else ''
-        hosting_guid = infraction.get('hostingGuid') if infraction.get('hostingGuid') else ''
-        abuse_type = infraction.get('abuseType') if infraction.get('abuseType') else ''
-        return ','.join([domain, shopper_id, hosting_guid, infraction_type, abuse_type])
+        infraction_type = infraction.get('infractionType', '')
+        domain = infraction.get('sourceDomainOrIp', '')
+        shopper_id = infraction.get('shopperId', '')
+        hosting_guid = infraction.get('hostingGuid', '')
+        abuse_type = infraction.get('abuseType', '')
+        domain_id = infraction.get('domainId', '')
+
+        if hosting_guid:
+            return ','.join([domain, shopper_id, hosting_guid, infraction_type, abuse_type])
+        elif domain_id:
+            return ','.join([domain, shopper_id, domain_id, infraction_type, abuse_type])
+        else:
+            return ','.join([domain, shopper_id, '', infraction_type, abuse_type])
 
     def _check_duplicate_and_persist(self, data):
         infraction_query = deepcopy(data)
@@ -47,6 +55,9 @@ class QueryHelper:
         if abuse_type:
             infraction_query['abuseTypes'] = [abuse_type]
 
+        # Popping hostedStatus since its required to add an infraction, but will break the query when getting
+        infraction_query.pop('hostedStatus', '')
+
         duplicate_infraction = self.mongo.get_duplicate_infractions_before_add(infraction_query)
         if duplicate_infraction:
             return duplicate_infraction, True
@@ -58,16 +69,16 @@ class QueryHelper:
         :param data: Dictionary containing infraction model k/v pairs for insertion into mimir collection
         :return: event id of new infraction or existing infraction if same data created within 24 hours
         """
-        with Lock().lock.create_lock(self._create_composite_key(data), ttl=self.TTL):
+        with Lock().lock.create_lock(QueryHelper._create_composite_key(data), ttl=self.TTL):
             return self._check_duplicate_and_persist(data)
 
-    def get_infraction_from_id(self, infractionId):
+    def get_infraction_from_id(self, infraction_id):
         """
         Obtain infraction data upon submission of an Infraction ID
-        :param infractionId: ObjectId of request as string
+        :param infraction_id: ObjectId of request as string
         :return:
         """
-        query = self.mongo.get_infraction(infractionId)
+        query = self.mongo.get_infraction(infraction_id)
         if query:
             query['infractionId'] = str(query.pop('_id'))
             query['createdDate'] = str(query.get('createdDate'))

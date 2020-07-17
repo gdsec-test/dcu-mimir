@@ -41,13 +41,19 @@ abuse_types = ['A_RECORD',
                'PHISHING',
                'SPAM']
 
+hosting_status_types = ['HOSTED',
+                        'REGISTERED']
+
 infraction_event = api.model(
     'InfractionEvent', {
         'infractionType': fields.String(required=True, description='the infraction type', enum=infraction_types),
         'ticketId': fields.String(require=False, description='ticket or incident associated with the infraction'),
         'sourceDomainOrIp': fields.String(required=True, description='domain associated with the infraction',
                                           example='godaddy.com'),
-        'hostingGuid': fields.String(required=True, description='hosting guid associated with the infraction',
+        'hostedStatus': fields.String(required=True, description='domain hosting status', enum=hosting_status_types),
+        'domainId': fields.String(required=False, description='domain ID for the domain associated with the infraction',
+                                  example='123456'),
+        'hostingGuid': fields.String(required=False, description='hosting guid associated with the infraction',
                                      example='testguid-test-guid-test-guidtest1234'),
         'shopperId': fields.String(required=True, description='shopper account associated with the infraction',
                                    example='abc123'),
@@ -157,6 +163,8 @@ class Infractions(Resource):
                         help='Domain or IP address')
     parser.add_argument('hostingGuid', type=str, location='args', required=False,
                         help='Hosting account GUID')
+    parser.add_argument('domainId', type=str, location='args', required=False,
+                        help='ID of domain name')
     parser.add_argument('shopperId', type=str, location='args', required=False,
                         help='Shopper account number')
     parser.add_argument('infractionTypes', type=str, location='args', required=False, action='append',
@@ -322,6 +330,7 @@ class GetInfractionId(Resource):
         """
         Returns information associated with a specific infractionId or a 404 if the id is not found
         """
+        query = None
         try:
             query = query_helper.get_infraction_from_id(infractionId)
 
