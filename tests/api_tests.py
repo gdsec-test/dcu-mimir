@@ -299,3 +299,51 @@ class TestRest(TestCase):
         prev_url = response.json.get('pagination', {}).get('prev')
         self.assertEqual(next_url, 'http://localhost/infractions?shopperId={}&limit=2&offset=5'.format(self.SHOPPER_ID1))
         self.assertEqual(prev_url, 'http://localhost/infractions?shopperId={}&limit=2&offset=1'.format(self.SHOPPER_ID1))
+
+    '''Infraction Count Tests'''
+
+    @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(QueryHelper, 'count_infractions')
+    def test_count_infractions_pass_nonzero_count(self, count_infractions, parse, payload):
+        data = {'shopperId': self.SHOPPER_ID1}
+        count_infractions.return_value = 12
+        response = self.client.get(url_for('infraction_count'), headers=self.HEADERS, query_string=data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(int(response.data), 12)
+
+    @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(QueryHelper, 'count_infractions')
+    def test_count_infractions_pass_zero_count(self, count_infractions, parse, payload):
+        data = {'shopperId': self.SHOPPER_ID1}
+        count_infractions.return_value = 0
+        response = self.client.get(url_for('infraction_count'), headers=self.HEADERS, query_string=data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(int(response.data), 0)
+
+    @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(QueryHelper, 'count_infractions')
+    def test_count_infractions_fail_empty_query(self, count_infractions, parse, payload):
+        response = self.client.get(url_for('infraction_count'), headers=self.HEADERS, query_string={})
+        self.assertEqual(response.status_code, 422)
+
+    @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(QueryHelper, 'count_infractions')
+    def test_count_infractions_pass_unknown_key_query(self, count_infractions, parse, payload):
+        data = {'unknownKey': 'Value for Unknown Key', 'shopperId': self.SHOPPER_ID1}
+        count_infractions.return_value = 12
+        response = self.client.get(url_for('infraction_count'), headers=self.HEADERS, query_string=data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(int(response.data), 12)
+
+    @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(QueryHelper, 'count_infractions')
+    def test_count_infractions_fail_type_error(self, count_infractions, parse, payload):
+        data = {'infractionTypes': 'INTENTIONALLY_MALICIOUS', 'shopperId': self.SHOPPER_ID1}
+        count_infractions.side_effect = TypeError()
+        response = self.client.get(url_for('infraction_count'), headers=self.HEADERS, query_string=data)
+        self.assertEqual(response.status_code, 422)

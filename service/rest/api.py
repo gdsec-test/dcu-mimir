@@ -44,6 +44,34 @@ abuse_types = ['A_RECORD',
 hosting_status_types = ['HOSTED',
                         'REGISTERED']
 
+# Initialize parser for parsing query string from the "infractions" and "infraction_count" <get> endpoint.
+parser = reqparse.RequestParser()
+parser.add_argument('sourceDomainOrIp', type=str, location='args', required=False,
+                    help='Domain or IP address')
+parser.add_argument('hostingGuid', type=str, location='args', required=False,
+                    help='Hosting account GUID')
+parser.add_argument('domainId', type=str, location='args', required=False,
+                    help='ID of domain name')
+parser.add_argument('shopperId', type=str, location='args', required=False,
+                    help='Shopper account number')
+parser.add_argument('infractionTypes', type=str, location='args', required=False, action='append',
+                    help='List containing zero or more of {} infraction types: {}'.format(len(infraction_types),
+                                                                                          infraction_types))
+parser.add_argument('abuseTypes', type=str, location='args', required=False, action='append',
+                    help='List containing zero or more of {} abuse types: {}'.format(len(abuse_types), abuse_types))
+parser.add_argument('startDate', type=str, location='args', required=False,
+                    help='Date from which infractions are retrieved. Default 6 months prior to current date. Format: YYYY-MM-DD')
+parser.add_argument('endDate', type=str, location='args', required=False,
+                    help='Date up to which infractions are retrieved. Default to current date. Format: YYYY-MM-DD')
+parser.add_argument('limit', type=int, location='args', required=False,
+                    help='Number of infractions to be retrieved in every get request. This value is defaulted to 25')
+parser.add_argument('offset', type=int, location='args', required=False,
+                    help='Index of the record from which the next batch of infractions is to be retrieved. This value is defaulted to 0.')
+parser.add_argument('note', type=str, location='args', required=False,
+                    help='Any note associated with the infraction')
+parser.add_argument('ncmecReportID', type=str, location='args', required=False,
+                    help='ncmecReportID associated with NCMEC Report submission')
+
 infraction_event = api.model(
     'InfractionEvent', {
         'infractionType': fields.String(required=True, description='the infraction type', enum=infraction_types),
@@ -157,33 +185,6 @@ class Health(Resource):
 class Infractions(Resource):
     _logger = logging.getLogger(__name__)
 
-    # Initialize parser for parsing query string from <get> endpoint.
-    parser = reqparse.RequestParser()
-    parser.add_argument('sourceDomainOrIp', type=str, location='args', required=False,
-                        help='Domain or IP address')
-    parser.add_argument('hostingGuid', type=str, location='args', required=False,
-                        help='Hosting account GUID')
-    parser.add_argument('domainId', type=str, location='args', required=False,
-                        help='ID of domain name')
-    parser.add_argument('shopperId', type=str, location='args', required=False,
-                        help='Shopper account number')
-    parser.add_argument('infractionTypes', type=str, location='args', required=False, action='append',
-                        help='List containing zero or more of {} infraction types: {}'.format(len(infraction_types), infraction_types))
-    parser.add_argument('abuseTypes', type=str, location='args', required=False, action='append',
-                        help='List containing zero or more of {} abuse types: {}'.format(len(abuse_types), abuse_types))
-    parser.add_argument('startDate', type=str, location='args', required=False,
-                        help='Date from which infractions are retrieved. Default 6 months prior to current date. Format: YYYY-MM-DD')
-    parser.add_argument('endDate', type=str, location='args', required=False,
-                        help='Date up to which infractions are retrieved. Default to current date. Format: YYYY-MM-DD')
-    parser.add_argument('limit', type=int, location='args', required=False,
-                        help='Number of infractions to be retrieved in every get request. This value is defaulted to 25')
-    parser.add_argument('offset', type=int, location='args', required=False,
-                        help='Index of the record from which the next batch of infractions is to be retrieved. This value is defaulted to 0.')
-    parser.add_argument('note', type=str, location='args', required=False,
-                        help='Any note associated with the infraction')
-    parser.add_argument('ncmecReportID', type=str, location='args', required=False,
-                        help='ncmecReportID associated with NCMEC Report submission')
-
     QUERY_PARAMETERS = 4
     PATH = 2
     PAGINATION_LIMIT = 25
@@ -233,7 +234,7 @@ class Infractions(Resource):
         """
         Returns a list infractions and the pagination information associated with the supplied infraction data.
         """
-        tmp_args = self.parser.parse_args()
+        tmp_args = parser.parse_args()
 
         # Check the parsed args from tmp_args create a new dict that only includes the k:v pairs where value is NOT None
         args = {k: v for k, v in tmp_args.items() if v}
@@ -311,6 +312,40 @@ class Infractions(Resource):
         url_parts[self.PATH] = endpoint
         url_parts[self.QUERY_PARAMETERS] = urlencode(args)
         return urlunparse(url_parts)
+
+
+@api.route('/infraction_count', endpoint='infraction_count')
+class InfractionCount(Resource):
+    _logger = logging.getLogger(__name__)
+
+    @api.expect(parser)
+    @api.response(200, 'OK')
+    @api.response(401, 'Unauthorized')
+    @api.response(403, 'Forbidden')
+    @api.response(422, 'Validation Error')
+    @api.doc(security='apikey')
+    @token_required
+    def get(self):
+        """
+        Returns an integer of the count of infractions which match the supplied infraction data.
+        """
+        tmp_args = parser.parse_args()
+
+        # Check the parsed args from tmp_args create a new dict that only includes the k:v pairs where value is NOT None
+        args = {k: v for k, v in tmp_args.items() if v}
+
+        infraction_count = 0
+        try:
+            if args:
+                infraction_count = query_helper.count_infractions(args)
+            else:
+                raise Exception('No parameters provided in query')
+
+        except Exception as e:
+            self._logger.warning('Error fetching {}: {}'.format(args, e))
+            abort(422, 'Error submitting request')
+
+        return infraction_count, 200
 
 
 @api.route('/infractions/<string:infractionId>', endpoint='get_infraction_id')
