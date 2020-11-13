@@ -40,7 +40,7 @@ class DevelopmentAppConfig(AppConfig):
     TOKEN_AUTHORITY = 'sso.dev-godaddy.com'
     CN_WHITELIST = {'dcu.zeus.int.dev-godaddy.com', 'godaddy-service.int.dev-godaddy.com', 'kelvin.int.dev-godaddy.com'}
     DB = 'devphishstory'
-    DB_HOST = '10.22.188.208'
+    DB_HOST = '10.36.156.188'
     DB_USER = 'devuser'
 
     def __init__(self):
