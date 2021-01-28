@@ -72,6 +72,13 @@ class QueryHelper:
         with Lock().lock.create_lock(QueryHelper._create_composite_key(data), ttl=self.TTL):
             return self._check_duplicate_and_persist(data)
 
+    def insert_non_infraction(self, data):
+        """
+        :param data: Dictionary containing non infraction model k/v pairs for insertion into mimir collection
+        :return: record id of new record
+        """
+        return self.mongo.add_non_infraction(data)
+
     def get_infraction_from_id(self, infraction_id):
         """
         Obtain infraction data upon submission of an Infraction ID

@@ -41,8 +41,17 @@ abuse_types = ['A_RECORD',
                'PHISHING',
                'SPAM']
 
-hosting_status_types = ['HOSTED',
-                        'REGISTERED']
+infraction_record_type = 'INFRACTION'
+non_inf_record_types = ['NOTE', 'NCMEC_REPORT']
+hosting_status_types = ['HOSTED', 'REGISTERED']
+
+KEY_INFRACTIONS = 'infractions'
+KEY_INFRACTION_TYPES = 'infractionTypes'
+KEY_LIMIT = 'limit'
+KEY_OFFSET = 'offset'
+KEY_NEXT = 'next'
+KEY_PAGINATION = 'pagination'
+KEY_PREV = 'prev'
 
 # Initialize parser for parsing query string from the "infractions" and "infraction_count" <get> endpoint.
 parser = reqparse.RequestParser()
@@ -54,7 +63,7 @@ parser.add_argument('domainId', type=str, location='args', required=False,
                     help='ID of domain name')
 parser.add_argument('shopperId', type=str, location='args', required=False,
                     help='Shopper account number')
-parser.add_argument('infractionTypes', type=str, location='args', required=False, action='append',
+parser.add_argument(KEY_INFRACTION_TYPES, type=str, location='args', required=False, action='append',
                     help='List containing zero or more of {} infraction types: {}'.format(len(infraction_types),
                                                                                           infraction_types))
 parser.add_argument('abuseTypes', type=str, location='args', required=False, action='append',
@@ -63,9 +72,9 @@ parser.add_argument('startDate', type=str, location='args', required=False,
                     help='Date from which infractions are retrieved. Default 6 months prior to current date. Format: YYYY-MM-DD')
 parser.add_argument('endDate', type=str, location='args', required=False,
                     help='Date up to which infractions are retrieved. Default to current date. Format: YYYY-MM-DD')
-parser.add_argument('limit', type=int, location='args', required=False,
+parser.add_argument(KEY_LIMIT, type=int, location='args', required=False,
                     help='Number of infractions to be retrieved in every get request. This value is defaulted to 25')
-parser.add_argument('offset', type=int, location='args', required=False,
+parser.add_argument(KEY_OFFSET, type=int, location='args', required=False,
                     help='Index of the record from which the next batch of infractions is to be retrieved. This value is defaulted to 0.')
 parser.add_argument('note', type=str, location='args', required=False,
                     help='Any note associated with the infraction')
@@ -75,6 +84,7 @@ parser.add_argument('ncmecReportID', type=str, location='args', required=False,
 infraction_event = api.model(
     'InfractionEvent', {
         'infractionType': fields.String(required=True, description='the infraction type', enum=infraction_types),
+        'recordType': fields.String(require=True, description='the type of record', example=infraction_record_type),
         'ticketId': fields.String(require=False, description='ticket or incident associated with the infraction'),
         'sourceDomainOrIp': fields.String(required=True, description='domain associated with the infraction',
                                           example='godaddy.com'),
@@ -92,10 +102,34 @@ infraction_event = api.model(
         'abuseType': fields.String(required=True, description='the abuse type', enum=abuse_types)
     })
 
+non_infraction_event = api.model(
+    'NonInfractionEvent', {
+        'infractionType': fields.String(required=False, description='the infraction type', enum=infraction_types),
+        'ticketId': fields.String(require=False, description='ticket or incident associated with the infraction'),
+        'sourceDomainOrIp': fields.String(required=True, description='domain associated with the infraction',
+                                          example='godaddy.com'),
+        'hostedStatus': fields.String(required=False, description='domain hosting status', enum=hosting_status_types),
+        'domainId': fields.String(required=False, description='domain ID for the domain associated with the infraction',
+                                  example='123456'),
+        'hostingGuid': fields.String(required=False, description='hosting guid associated with the infraction',
+                                     example='testguid-test-guid-test-guidtest1234'),
+        'shopperId': fields.String(required=True, description='shopper account associated with the infraction',
+                                   example='abc123'),
+        'recordType': fields.String(required=True, description='the record type', enum=non_inf_record_types),
+        'abuseType': fields.String(required=True, description='the abuse type', enum=abuse_types)
+    })
+
 infraction_result = api.model(
     'InfractionCreationResponse', {
         'infractionId': fields.String(required=True, description='monotonically increasing request id',
                                       example='f9c8e07373d4471cac5c4027ac6db034')
+    }
+)
+
+non_infraction_result = api.model(
+    'NonInfractionCreationResponse', {
+        'recordId': fields.String(required=True, description='monotonically increasing request id',
+                                  example='f9c8e07373d4471cac5c4027ac6db034')
     }
 )
 
@@ -110,18 +144,18 @@ infraction_id_result = api.inherit(
 
 pagination = api.model(
     'Pagination', {
-        'next': fields.String(required=True, description='Url for the next batch of maching infractions',
-                              example='https://mimir.int.godaddy.com/infractions?sourceDomainOrIp=abcs.com&limit=25&offset=25'),
-        'prev': fields.String(required=True, description='Url for the previous batch of maching infractions',
-                              example='https://mimir.int.godaddy.com/infractions?sourceDomainOrIp=abcs.com&limit=25&offset=0')
+        KEY_NEXT: fields.String(required=True, description='Url for the next batch of maching infractions',
+                                example='https://mimir.int.godaddy.com/infractions?sourceDomainOrIp=abcs.com&limit=25&offset=25'),
+        KEY_PREV: fields.String(required=True, description='Url for the previous batch of maching infractions',
+                                example='https://mimir.int.godaddy.com/infractions?sourceDomainOrIp=abcs.com&limit=25&offset=0')
 
     }
 )
 
 infractions_response = api.model(
     'InfractionsResponse', {
-        'infractions': fields.List(fields.Nested(infraction_id_result), required=True),
-        'pagination': fields.Nested(pagination, required=True)
+        KEY_INFRACTIONS: fields.List(fields.Nested(infraction_id_result), required=True),
+        KEY_PAGINATION: fields.Nested(pagination, required=True)
     }
 )
 
@@ -171,6 +205,68 @@ def token_required(f):
     return wrapped
 
 
+class PaginationLinks(Resource):
+    PAGINATION_LIMIT = 25
+    PAGINATION_OFFSET = 0
+    PATH = 2
+    QUERY_PARAMETERS = 4
+
+    def _create_paginated_links(self, _args):
+        """
+        Method to create paginated links
+        :param _args: Dictionary of query parameters that are passed in the http request.
+        :return: Dictionary of paginated links containing the next and previous url
+        """
+        _args.update({KEY_LIMIT: _args.get(KEY_LIMIT, self.PAGINATION_LIMIT)})
+        _offset = _args.pop(KEY_OFFSET, self.PAGINATION_OFFSET)
+        _namespace = ''
+        for _ns in self.api.namespaces:
+            if _ns.path:
+                _namespace = '{}{}/'.format(_namespace, _ns.path)
+        return self._construct_urls(_namespace, _args, _offset)
+
+    @staticmethod
+    def _handle_infraction_types(_args):
+        """
+        Since the infractionTypes field is crated as a list, we need to iterate the list to create a URL comprised
+        of one infractionType per entry in the list
+        :param _args: dict of arguments
+        :return: string of infractionType parameters
+        """
+        _infraction_type_string = ''
+        if isinstance(_args, dict):
+            _infraction_types = _args.pop(KEY_INFRACTION_TYPES, None)
+            if _infraction_types:
+                for _type in _infraction_types:
+                    _infraction_type_string += '&{}={}'.format(KEY_INFRACTION_TYPES, _type)
+        return _infraction_type_string
+
+    def _construct_urls(self, _namespace, _args, _offset):
+        """
+        Method to create the URL with parameters which are common between previous and next links.  Then
+        create next and prev links using the offsets pertaining to each.
+        :param _namespace: String representing api namespace
+        :param _args: Dictionary of query parameters that are passed in the http request.
+        :param _offset: Index of the record from which the next batch of infractions is to be retrieved.
+        :return: URL with the appropriate query parameters
+        """
+        _infraction_type_string = PaginationLinks._handle_infraction_types(_args)
+        url_parts = list(urlparse(self.api.base_url))
+        url_parts[self.PATH] = '{}{}'.format(_namespace, self.endpoint)
+        _args.update({KEY_OFFSET: _offset + _args.get(KEY_LIMIT)})
+        url_parts[self.QUERY_PARAMETERS] = urlencode(_args) + _infraction_type_string
+        _next_url = urlunparse(url_parts)
+        _args.update({KEY_OFFSET: _offset - _args.get(KEY_LIMIT)})
+        if _args.get(KEY_OFFSET) < 0:
+            _args.update({KEY_OFFSET: 0})
+        url_parts[self.QUERY_PARAMETERS] = urlencode(_args) + _infraction_type_string
+        _prev_url = urlunparse(url_parts)
+        return {
+            KEY_NEXT: '{}'.format(_next_url),
+            KEY_PREV: '{}'.format(_prev_url)
+        }
+
+
 @api.route('/health', endpoint='health')
 class Health(Resource):
     @api.response(200, 'OK')
@@ -182,13 +278,8 @@ class Health(Resource):
 
 
 @api.route('/infractions', endpoint='infractions')
-class Infractions(Resource):
+class Infractions(PaginationLinks):
     _logger = logging.getLogger(__name__)
-
-    QUERY_PARAMETERS = 4
-    PATH = 2
-    PAGINATION_LIMIT = 25
-    PAGINATION_OFFSET = 0
 
     @api.expect(infraction_event)
     @api.marshal_with(infraction_result)
@@ -206,6 +297,11 @@ class Infractions(Resource):
         Returns the Event ID and 200 upon attempted submission of duplicate data entered with the last 24 hours
         """
         data = request.json
+
+        if data.get('recordType') != infraction_record_type:
+            message = 'Record type must be {}'.format(infraction_record_type)
+            self._logger.error('{}: {}'.format(message, data))
+            abort(400, message)
 
         try:
             infraction_id, duplicate = query_helper.insert_infraction(data)
@@ -248,70 +344,18 @@ class Infractions(Resource):
 
         response_dict = {}
         try:
-            response_dict['infractions'] = query_helper.get_infractions(args)
-            response_dict['pagination'] = self._create_paginated_links(self.api.base_url, self.endpoint, input_args)
+            response_dict[KEY_INFRACTIONS] = query_helper.get_infractions(args)
+            response_dict[KEY_PAGINATION] = self._create_paginated_links(input_args)
 
         except Exception as e:
             self._logger.warning('Error fetching {}: {}'.format(args, e))
             abort(422, 'Error submitting request')
 
-        if not response_dict.get('infractions') or \
-                len(response_dict.get('infractions', [])) < input_args.get('limit', self.PAGINATION_LIMIT):
-            response_dict.get('pagination', {}).update({'next': None})
+        if not response_dict.get(KEY_INFRACTIONS) or \
+                len(response_dict.get(KEY_INFRACTIONS, [])) < input_args.get(KEY_LIMIT, self.PAGINATION_LIMIT):
+            response_dict.get(KEY_PAGINATION, {}).update({KEY_NEXT: None})
 
         return response_dict
-
-    def _create_paginated_links(self, base_url, endpoint, args):
-        """
-        Method to create paginated links
-        :param base_url: Base url mimir depending on the environment in which it is hosted
-        :param endpoint: Actual endpoint that is currently being accessed
-        :param args: Dictionary of query parameters that are passed in the http request.
-        :return Dictionary of paginated links containing the next and previous url
-        """
-        args.update({'limit': args.get('limit', self.PAGINATION_LIMIT)})
-        offset = args.pop('offset', self.PAGINATION_OFFSET)
-        return {
-            'next': '{}'.format(self._construct_next_url(base_url, endpoint, args, offset)),
-            'prev': '{}'.format(self._construct_prev_url(base_url, endpoint, args, offset))
-        }
-
-    def _construct_next_url(self, base_url, endpoint, args, offset):
-        """
-        Method to construct the next url for pagination based on query parameters.
-        This method uses urlparse method from urllib and breaks the url into 6 parts namely
-        scheme (0), netloc (1), path (2), params= (3), query=(4), and fragment= (5)
-        :param base_url: Base url for mimir depending on the environment in which it is hosted
-        :param endpoint: Actual endpoint that is currently being accessed
-        :param args: Dictionary of query parameters that are passed in the http request.
-        :param offset: Index of the record from which the next batch of infractions is to be retrieved.
-        :return Next url with the appropriate query parameters
-        """
-        args.update({'offset': offset + args.get('limit')})
-        url_parts = list(urlparse(base_url))
-        url_parts[self.PATH] = endpoint
-        url_parts[self.QUERY_PARAMETERS] = urlencode(args)
-        return urlunparse(url_parts)
-
-    def _construct_prev_url(self, base_url, endpoint, args, offset):
-        """
-        Method to construct the previous url for pagination based on query parameters
-        This method uses urlparse method from urllib and breaks the url into 6 parts namely
-        scheme (0), netloc (1), path (2), params= (3), query=(4), and fragment= (5)
-        :param base_url: Base url for mimir depending on the environment in which it is hosted
-        :param endpoint: Actual endpoint that is currently being accessed
-        :param args: Dictionary of query parameters that are passed in the http request.
-        :param offset: Index of the record from which the next batch of infractions is to be retrieved.
-        :return Next url with the appropriate query parameters
-        """
-        args.update({'offset': offset - args.get('limit')})
-        if args.get('offset') < 0:
-            args.update({'offset': 0})
-
-        url_parts = list(urlparse(base_url))
-        url_parts[self.PATH] = endpoint
-        url_parts[self.QUERY_PARAMETERS] = urlencode(args)
-        return urlunparse(url_parts)
 
 
 @api.route('/infraction_count', endpoint='infraction_count')
@@ -377,3 +421,78 @@ class GetInfractionId(Resource):
             abort(404, 'Infraction ID: {} not found'.format(infractionId))
 
         return query, 200
+
+
+@api.route('/non-infraction', endpoint='non-infraction')
+class NonInfractions(Resource):
+    _logger = logging.getLogger(__name__)
+
+    @api.expect(non_infraction_event)
+    @api.marshal_with(non_infraction_result)
+    @api.response(201, 'Created')
+    @api.response(400, 'Bad Request')
+    @api.response(401, 'Unauthorized')
+    @api.response(403, 'Forbidden')
+    @api.response(422, 'Validation Error')
+    @api.doc(security='apikey')
+    @token_required
+    def post(self):
+        """
+        Returns the Event ID and 201 upon successful creation of Non-Infraction Event (Note, NCMEC Report)
+        """
+        data = request.json
+
+        try:
+            record_id = query_helper.insert_non_infraction(data)
+            return {'recordId': str(record_id) if record_id else ''}, 201
+        except (KeyError, TypeError, ValueError) as e:
+            self._logger.error('Validation error {}: {}'.format(data, e))
+            abort(422, e)
+        except Exception as e:
+            self._logger.error('Error submitting {}: {}'.format(data, e))
+            abort(422, 'Error submitting request')
+
+
+@api.route('/history', endpoint='history')
+class History(PaginationLinks):
+    _logger = logging.getLogger(__name__)
+
+    @api.expect(parser)
+    @api.marshal_with(infractions_response)
+    @api.response(200, 'OK')
+    @api.response(400, 'Bad Request')
+    @api.response(401, 'Unauthorized')
+    @api.response(403, 'Forbidden')
+    @api.response(422, 'Validation Error')
+    @api.doc(security='apikey')
+    @token_required
+    def get(self):
+        """
+        Returns Mimir history and the pagination information associated with the supplied request data.
+        """
+        tmp_args = parser.parse_args()
+
+        # Check the parsed args from tmp_args create a new dict that only includes the k:v pairs where value is NOT None
+        args = {k: v for k, v in tmp_args.items() if v}
+
+        """
+        Creating a copy of the query parameters passed in the request as the args dictionary gets modified in
+        the dcdatabase library. For instance parameters like startDate and endDate are popped from the args
+        dictionary in the input validation phase.
+        """
+        input_args = copy.deepcopy(args)
+
+        response_dict = {}
+        try:
+            response_dict[KEY_INFRACTIONS] = query_helper.get_infractions(args)
+            response_dict[KEY_PAGINATION] = self._create_paginated_links(input_args)
+
+        except Exception as e:
+            self._logger.warning('Error fetching {}: {}'.format(args, e))
+            abort(422, 'Error submitting request')
+
+        if not response_dict.get(KEY_INFRACTIONS) or \
+                len(response_dict.get(KEY_INFRACTIONS, [])) < input_args.get(KEY_LIMIT, self.PAGINATION_LIMIT):
+            response_dict.get(KEY_PAGINATION, {}).update({KEY_NEXT: None})
+
+        return response_dict

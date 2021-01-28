@@ -101,7 +101,7 @@ class TestRest(TestCase):
         insert_infraction.return_value = '12345', False
         data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '133F', 'sourceDomainOrIp': self.TEST_DOMAIN,
                 'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING,
-                'abuseType': self.PHISHING}
+                'abuseType': self.PHISHING, 'recordType': 'INFRACTION'}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 201)
 
@@ -112,7 +112,7 @@ class TestRest(TestCase):
         insert_infraction.return_value = '12345', False
         data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '128F', 'sourceDomainOrIp': self.TEST_DOMAIN,
                 'hostedStatus': self.REGISTERED, 'domainId': '1234', 'infractionType': self.CUSTOMER_WARNING,
-                'abuseType': self.PHISHING}
+                'abuseType': self.PHISHING, 'recordType': 'INFRACTION'}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 201)
 
@@ -123,7 +123,7 @@ class TestRest(TestCase):
         insert_infraction.return_value = '12345', True
         data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '129F', 'sourceDomainOrIp': self.TEST_DOMAIN,
                 'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING,
-                'abuseType': self.PHISHING}
+                'abuseType': self.PHISHING, 'recordType': 'INFRACTION'}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 200)
 
@@ -133,7 +133,8 @@ class TestRest(TestCase):
     def test_insert_infraction_validation_error(self, insert_infraction, parse, payload):
         insert_infraction.side_effect = TypeError()
         data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '130F', 'sourceDomainOrIp': self.TEST_DOMAIN,
-                'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1, 'infractionType': 'Oops'}
+                'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1, 'infractionType': 'Oops',
+                'recordType': 'INFRACTION'}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 400)
 
@@ -143,20 +144,9 @@ class TestRest(TestCase):
     def test_insert_infraction_when_required_param_missing(self, insert_infraction, parse, payload):
         insert_infraction.side_effect = TypeError()
         data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '131F', 'sourceDomainOrIp': self.TEST_DOMAIN,
-                'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1}
+                'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1, 'recordType': 'INFRACTION'}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 400)
-
-    @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
-    @patch.object(QueryHelper, 'insert_infraction')
-    def test_insert_infraction_with_note(self, insert_infraction, parse, payload):
-        insert_infraction.return_value = '12346', False
-        data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '132F', 'sourceDomainOrIp': self.TEST_DOMAIN,
-                'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING,
-                'note': 'manual note', 'abuseType': self.PHISHING}
-        response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
-        self.assertEqual(response.status_code, 201)
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
@@ -165,7 +155,7 @@ class TestRest(TestCase):
         insert_infraction.return_value = '12346', False
         data = {'shopperId': self.SHOPPER_ID2, 'sourceDomainOrIp': self.TEST_DOMAIN, 'hostedStatus': self.HOSTED,
                 'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING, 'note': 'manual note',
-                'abuseType': self.PHISHING}
+                'abuseType': self.PHISHING, 'recordType': 'INFRACTION'}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 201)
 
@@ -176,9 +166,52 @@ class TestRest(TestCase):
         insert_infraction.return_value = '12345', False
         data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '128F', 'sourceDomainOrIp': 'test-csam-domain.com',
                 'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1, 'infractionType': 'NCMEC_REPORT_SUBMITTED',
-                'abuseType': self.CHILD_ABUSE}
+                'abuseType': self.CHILD_ABUSE, 'recordType': 'INFRACTION'}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 201)
+
+    @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(QueryHelper, 'insert_infraction')
+    def test_insert_non_infraction_record_type(self, insert_infraction, parse, payload):
+        insert_infraction.return_value = '12345', False
+        data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '133F', 'sourceDomainOrIp': self.TEST_DOMAIN,
+                'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING,
+                'abuseType': self.PHISHING, 'recordType': 'NOTE'}
+        response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
+        self.assertEqual(response.status_code, 400)
+
+    '''Post Non Infraction Tests'''
+
+    @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(QueryHelper, 'insert_non_infraction')
+    def test_insert_non_infraction_with_note(self, insert_infraction, parse, payload):
+        insert_infraction.return_value = '12346', False
+        data = {'shopperId': self.SHOPPER_ID2, 'recordType': 'NOTE', 'sourceDomainOrIp': self.TEST_DOMAIN,
+                'note': 'manual note', 'abuseType': self.PHISHING}
+        response = self.client.post(url_for('non-infraction'), data=json.dumps(data), headers=self.HEADERS)
+        self.assertEqual(response.status_code, 201)
+
+    @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(QueryHelper, 'insert_non_infraction')
+    def test_insert_non_infraction_ncmec(self, insert_infraction, parse, payload):
+        insert_infraction.return_value = '12346', False
+        data = {'shopperId': self.SHOPPER_ID2, 'recordType': 'NCMEC_REPORT', 'sourceDomainOrIp': self.TEST_DOMAIN,
+                'note': 'manual note', 'abuseType': self.PHISHING}
+        response = self.client.post(url_for('non-infraction'), data=json.dumps(data), headers=self.HEADERS)
+        self.assertEqual(response.status_code, 201)
+
+    @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(QueryHelper, 'insert_infraction')
+    def test_insert_non_infraction_required_param_missing(self, insert_infraction, parse, payload):
+        insert_infraction.side_effect = TypeError()
+        data = {'shopperId': self.SHOPPER_ID2, 'sourceDomainOrIp': self.TEST_DOMAIN,
+                'note': 'manual note', 'abuseType': self.PHISHING}
+        response = self.client.post(url_for('non-infraction'), data=json.dumps(data), headers=self.HEADERS)
+        self.assertEqual(response.status_code, 400)
 
     '''Get Infractions Tests'''
 
@@ -280,8 +313,8 @@ class TestRest(TestCase):
         response = self.client.get(url_for('infractions'), headers=self.HEADERS, query_string=data)
         next_url = response.json.get('pagination', {}).get('next')
         prev_url = response.json.get('pagination', {}).get('prev')
-        self.assertEqual(next_url, 'http://localhost/infractions?shopperId={}&limit=2&offset=2'.format(self.SHOPPER_ID1))
-        self.assertEqual(prev_url, 'http://localhost/infractions?shopperId={}&limit=2&offset=0'.format(self.SHOPPER_ID1))
+        self.assertEqual(next_url, 'http://localhost/v1/infractions?shopperId={}&limit=2&offset=2'.format(self.SHOPPER_ID1))
+        self.assertEqual(prev_url, 'http://localhost/v1/infractions?shopperId={}&limit=2&offset=0'.format(self.SHOPPER_ID1))
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
@@ -297,8 +330,8 @@ class TestRest(TestCase):
         response = self.client.get(url_for('infractions'), headers=self.HEADERS, query_string=data)
         next_url = response.json.get('pagination', {}).get('next')
         prev_url = response.json.get('pagination', {}).get('prev')
-        self.assertEqual(next_url, 'http://localhost/infractions?shopperId={}&limit=2&offset=5'.format(self.SHOPPER_ID1))
-        self.assertEqual(prev_url, 'http://localhost/infractions?shopperId={}&limit=2&offset=1'.format(self.SHOPPER_ID1))
+        self.assertEqual(next_url, 'http://localhost/v1/infractions?shopperId={}&limit=2&offset=5'.format(self.SHOPPER_ID1))
+        self.assertEqual(prev_url, 'http://localhost/v1/infractions?shopperId={}&limit=2&offset=1'.format(self.SHOPPER_ID1))
 
     '''Infraction Count Tests'''
 
