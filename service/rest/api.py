@@ -52,6 +52,7 @@ KEY_OFFSET = 'offset'
 KEY_NEXT = 'next'
 KEY_PAGINATION = 'pagination'
 KEY_PREV = 'prev'
+KEY_RECORD_TYPE = 'recordType'
 
 # Initialize parser for parsing query string from the "infractions" and "infraction_count" <get> endpoint.
 parser = reqparse.RequestParser()
@@ -84,7 +85,7 @@ parser.add_argument('ncmecReportID', type=str, location='args', required=False,
 infraction_event = api.model(
     'InfractionEvent', {
         'infractionType': fields.String(required=True, description='the infraction type', enum=infraction_types),
-        'recordType': fields.String(require=True, description='the type of record', example=infraction_record_type),
+        KEY_RECORD_TYPE: fields.String(require=True, description='the type of record', example=infraction_record_type),
         'ticketId': fields.String(require=False, description='ticket or incident associated with the infraction'),
         'sourceDomainOrIp': fields.String(required=True, description='domain associated with the infraction',
                                           example='godaddy.com'),
@@ -115,7 +116,7 @@ non_infraction_event = api.model(
                                      example='testguid-test-guid-test-guidtest1234'),
         'shopperId': fields.String(required=True, description='shopper account associated with the infraction',
                                    example='abc123'),
-        'recordType': fields.String(required=True, description='the record type', enum=non_inf_record_types),
+        KEY_RECORD_TYPE: fields.String(required=True, description='the record type', enum=non_inf_record_types),
         'abuseType': fields.String(required=True, description='the abuse type', enum=abuse_types)
     })
 
@@ -298,7 +299,7 @@ class Infractions(PaginationLinks):
         """
         data = request.json
 
-        if data.get('recordType') != infraction_record_type:
+        if data.get(KEY_RECORD_TYPE) != infraction_record_type:
             message = 'Record type must be {}'.format(infraction_record_type)
             self._logger.error('{}: {}'.format(message, data))
             abort(400, message)
@@ -331,6 +332,7 @@ class Infractions(PaginationLinks):
         Returns a list infractions and the pagination information associated with the supplied infraction data.
         """
         tmp_args = parser.parse_args()
+        tmp_args[KEY_RECORD_TYPE] = infraction_record_type
 
         # Check the parsed args from tmp_args create a new dict that only includes the k:v pairs where value is NOT None
         args = {k: v for k, v in tmp_args.items() if v}
