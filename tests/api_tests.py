@@ -313,8 +313,8 @@ class TestRest(TestCase):
         response = self.client.get(url_for('infractions'), headers=self.HEADERS, query_string=data)
         next_url = response.json.get('pagination', {}).get('next')
         prev_url = response.json.get('pagination', {}).get('prev')
-        self.assertEqual(next_url, 'http://localhost/v1/infractions?shopperId={}&limit=2&offset=2'.format(self.SHOPPER_ID1))
-        self.assertEqual(prev_url, 'http://localhost/v1/infractions?shopperId={}&limit=2&offset=0'.format(self.SHOPPER_ID1))
+        self.assertEqual(next_url, 'http://localhost/v1/infractions?shopperId={}&limit=2&recordType=INFRACTION&offset=2'.format(self.SHOPPER_ID1))
+        self.assertEqual(prev_url, 'http://localhost/v1/infractions?shopperId={}&limit=2&recordType=INFRACTION&offset=0'.format(self.SHOPPER_ID1))
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
@@ -330,8 +330,8 @@ class TestRest(TestCase):
         response = self.client.get(url_for('infractions'), headers=self.HEADERS, query_string=data)
         next_url = response.json.get('pagination', {}).get('next')
         prev_url = response.json.get('pagination', {}).get('prev')
-        self.assertEqual(next_url, 'http://localhost/v1/infractions?shopperId={}&limit=2&offset=5'.format(self.SHOPPER_ID1))
-        self.assertEqual(prev_url, 'http://localhost/v1/infractions?shopperId={}&limit=2&offset=1'.format(self.SHOPPER_ID1))
+        self.assertEqual(next_url, 'http://localhost/v1/infractions?shopperId={}&limit=2&recordType=INFRACTION&offset=5'.format(self.SHOPPER_ID1))
+        self.assertEqual(prev_url, 'http://localhost/v1/infractions?shopperId={}&limit=2&recordType=INFRACTION&offset=1'.format(self.SHOPPER_ID1))
 
     '''Infraction Count Tests'''
 
