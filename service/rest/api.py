@@ -19,17 +19,18 @@ query_helper = QueryHelper(settings)
 
 api = Namespace('v1', title='DCU Repeat Infractions API', description='')
 
-infraction_types = ['INTENTIONALLY_MALICIOUS',
-                    'SUSPENDED',
+infraction_types = ['CONTENT_REMOVED',
                     'CUSTOMER_WARNING',
-                    'REPEAT_OFFENDER',
                     'EXTENSIVE_COMPROMISE',
-                    'CONTENT_REMOVED',
-                    'SHOPPER_COMPROMISE',
+                    'INTENTIONALLY_MALICIOUS',
                     'MALWARE_SCANNER_NOTICE',
                     'MANUAL_NOTE',
-                    'USERGEN_WARNING',
-                    'NCMEC_REPORT_SUBMITTED']
+                    'NCMEC_REPORT_SUBMITTED',
+                    'REPEAT_OFFENDER',
+                    'SHOPPER_COMPROMISE',
+                    'SUSPENDED',
+                    'SUSPENDED_CSAM',
+                    'USERGEN_WARNING']
 
 abuse_types = ['A_RECORD',
                'CHILD_ABUSE',
