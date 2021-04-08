@@ -90,6 +90,8 @@ infraction_event = api.model(
         'ticketId': fields.String(require=False, description='ticket or incident associated with the infraction'),
         'sourceDomainOrIp': fields.String(required=True, description='domain associated with the infraction',
                                           example='godaddy.com'),
+        'sourceSubDomain': fields.String(required=False, description='subdomain associated with the infraction',
+                                         example='abc.godaddy.com'),
         'hostedStatus': fields.String(required=True, description='domain hosting status', enum=hosting_status_types),
         'domainId': fields.String(required=False, description='domain ID for the domain associated with the infraction',
                                   example='123456'),

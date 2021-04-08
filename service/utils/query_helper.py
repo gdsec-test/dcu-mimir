@@ -27,7 +27,7 @@ class QueryHelper:
         :return composite key:
         """
         infraction_type = infraction.get('infractionType', '')
-        domain = infraction.get('sourceDomainOrIp', '')
+        domain = infraction.get('sourceSubDomain', infraction.get('sourceDomainOrIp', ''))
         shopper_id = infraction.get('shopperId', '')
         hosting_guid = infraction.get('hostingGuid', '')
         abuse_type = infraction.get('abuseType', '')
