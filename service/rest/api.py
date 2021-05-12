@@ -322,46 +322,6 @@ class Infractions(PaginationLinks):
             self._logger.error('Error submitting {}: {}'.format(data, e))
             abort(422, 'Error submitting request')
 
-    @api.expect(parser)
-    @api.marshal_with(infractions_response)
-    @api.response(200, 'OK')
-    @api.response(401, 'Unauthorized')
-    @api.response(403, 'Forbidden')
-    @api.response(422, 'Validation Error')
-    @api.doc(security='apikey')
-    @token_required
-    def get(self):
-        """
-        Returns a list infractions and the pagination information associated with the supplied infraction data.
-        """
-        tmp_args = parser.parse_args()
-        tmp_args[KEY_RECORD_TYPE] = infraction_record_type
-
-        # Check the parsed args from tmp_args create a new dict that only includes the k:v pairs where value is NOT None
-        args = {k: v for k, v in tmp_args.items() if v}
-
-        """
-        Creating a copy of the query parameters passed in the request as the args dictionary gets modified in
-        the dcdatabase library. For instance parameters like startDate and endDate are popped from the args
-        dictionary in the input validation phase.
-        """
-        input_args = copy.deepcopy(args)
-
-        response_dict = {}
-        try:
-            response_dict[KEY_INFRACTIONS] = query_helper.get_infractions(args)
-            response_dict[KEY_PAGINATION] = self._create_paginated_links(input_args)
-
-        except Exception as e:
-            self._logger.warning('Error fetching {}: {}'.format(args, e))
-            abort(422, 'Error submitting request')
-
-        if not response_dict.get(KEY_INFRACTIONS) or \
-                len(response_dict.get(KEY_INFRACTIONS, [])) < input_args.get(KEY_LIMIT, self.PAGINATION_LIMIT):
-            response_dict.get(KEY_PAGINATION, {}).update({KEY_NEXT: None})
-
-        return response_dict
-
 
 @api.route('/infraction_count', endpoint='infraction_count')
 class InfractionCount(Resource):
@@ -489,7 +449,7 @@ class History(PaginationLinks):
 
         response_dict = {}
         try:
-            response_dict[KEY_INFRACTIONS] = query_helper.get_infractions(args)
+            response_dict[KEY_INFRACTIONS] = query_helper.get_history(args)
             response_dict[KEY_PAGINATION] = self._create_paginated_links(input_args)
 
         except Exception as e:

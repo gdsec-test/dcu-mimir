@@ -20,18 +20,18 @@ class QueryHelper:
         self.mongo = MimirMongo(settings.DBURL, settings.DB, settings.COLLECTION)
 
     @staticmethod
-    def _create_composite_key(infraction):
+    def _create_composite_key(data: dict) -> str:
         """
         Creates a composite key.
-        :param infraction:
-        :return composite key:
+        :param data: infraction dictionary
+        :return: string composite key
         """
-        infraction_type = infraction.get('infractionType', '')
-        domain = infraction.get('sourceSubDomain', infraction.get('sourceDomainOrIp', ''))
-        shopper_id = infraction.get('shopperId', '')
-        hosting_guid = infraction.get('hostingGuid', '')
-        abuse_type = infraction.get('abuseType', '')
-        domain_id = infraction.get('domainId', '')
+        abuse_type = data.get('abuseType', '')
+        domain = data.get('sourceSubDomain', data.get('sourceDomainOrIp', ''))
+        domain_id = data.get('domainId', '')
+        hosting_guid = data.get('hostingGuid', '')
+        infraction_type = data.get('infractionType', '')
+        shopper_id = data.get('shopperId', '')
 
         if hosting_guid:
             return ','.join([domain, shopper_id, hosting_guid, infraction_type, abuse_type])
@@ -40,7 +40,7 @@ class QueryHelper:
         else:
             return ','.join([domain, shopper_id, '', infraction_type, abuse_type])
 
-    def _check_duplicate_and_persist(self, data):
+    def _check_duplicate_and_persist(self, data: dict) -> tuple:
         infraction_query = deepcopy(data)
 
         # Popping infractionType from the post request and replacing with a list of infractionTypes
@@ -64,7 +64,7 @@ class QueryHelper:
         else:
             return self.mongo.add_infraction(data), False
 
-    def insert_infraction(self, data):
+    def insert_infraction(self, data: dict) -> tuple:
         """
         :param data: Dictionary containing infraction model k/v pairs for insertion into mimir collection
         :return: event id of new infraction or existing infraction if same data created within 24 hours
@@ -72,14 +72,14 @@ class QueryHelper:
         with Lock().lock.create_lock(QueryHelper._create_composite_key(data), ttl=self.TTL):
             return self._check_duplicate_and_persist(data)
 
-    def insert_non_infraction(self, data):
+    def insert_non_infraction(self, data: dict) -> str:
         """
         :param data: Dictionary containing non infraction model k/v pairs for insertion into mimir collection
         :return: record id of new record
         """
         return self.mongo.add_non_infraction(data)
 
-    def get_infraction_from_id(self, infraction_id):
+    def get_infraction_from_id(self, infraction_id: str) -> dict:
         """
         Obtain infraction data upon submission of an Infraction ID
         :param infraction_id: ObjectId of request as string
@@ -91,9 +91,9 @@ class QueryHelper:
             query['createdDate'] = str(query.get('createdDate'))
         return query
 
-    def get_infractions(self, data):
+    def get_history(self, history_query: dict) -> list:
         """
-        Obtain list of infractions matching provided data dict.
+        Obtain list of infractions/non-infractions matching provided data dict.
             Data dict must have at least one of sourceDomainOrIp, hostingGuid, or shopperId.
             Optional query params to further limit search results are:
             infractionType: (For full list of supported infraction types please refer to service.rest.api)
@@ -101,19 +101,19 @@ class QueryHelper:
                        Default 6 months prior to current date.
             endDate: string YYYY-MM-DD Specify date up to which infractions are retrieved.
                      Default to current date.
-        :param data: Dict of infraction fields and values
-        :return: List of infractions
+        :param history_query: Dict of infraction fields and values
+        :return: List of historical infractions and non-infractions
         """
 
-        infractions = self.mongo.get_infractions(data)
+        history = self.mongo.get_history(history_query)
 
-        for infraction in infractions:
-            infraction['infractionId'] = str(infraction.pop('_id'))
-            infraction['createdDate'] = str(infraction.get('createdDate'))
+        for historical_entry in history:
+            historical_entry['infractionId'] = str(historical_entry.pop('_id'))
+            historical_entry['createdDate'] = str(historical_entry.get('createdDate'))
 
-        return infractions
+        return history
 
-    def count_infractions(self, infraction_data):
+    def count_infractions(self, infraction_data: dict) -> int:
         """
         Provide infraction data and get a count of the number of infractions matching that data
         :param infraction_data:

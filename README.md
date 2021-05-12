@@ -67,6 +67,7 @@ Mimir is built utilizing the following key technologies
 ## Running Locally
 If you would like to run Mimir locally, you will need to specify the following environment variables
 * `sysenv` (Set to `dev`. Other values include: `test`, `ote`, `prod`)
+* `REDIS` (`localhost`)
 * `DB_PASS` (Password for MongoDB), writes to `infractions` collection
 
 ### Examples

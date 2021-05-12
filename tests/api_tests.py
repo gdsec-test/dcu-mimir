@@ -42,17 +42,24 @@ class MockJomaxToken:
 
 
 class TestRest(TestCase):
+    CHILD_ABUSE = 'CHILD_ABUSE'
+    CUSTOMER_WARNING = 'CUSTOMER_WARNING'
+    GET_HISTORY_URL = 'http://localhost/v1/history'
+    GUID1 = 'abc123-def456-ghv115'
     HEADERS = {'Content-Type': 'application/json', 'Authorization': 'fake_jwt'}
+    HOSTED = 'HOSTED'
+    KEY_INFRACTION_ID = 'infractionId'
+    KEY_NEXT = 'next'
+    KEY_PAGINATION = 'pagination'
+    KEY_PREV = 'prev'
+    KEY_SHOPPER_ID = 'shopperId'
+    KEY_TICKET_ID = 'ticketId'
+    PHISHING = 'PHISHING'
+    REGISTERED = 'REGISTERED'
     SHOPPER_ID1 = '8675309'
     SHOPPER_ID2 = '4388'
     SUSPENDED = 'SUSPENDED'
-    CUSTOMER_WARNING = 'CUSTOMER_WARNING'
     TEST_DOMAIN = 'test-domain.com'
-    GUID1 = 'abc123-def456-ghv115'
-    PHISHING = 'PHISHING'
-    CHILD_ABUSE = 'CHILD_ABUSE'
-    HOSTED = 'HOSTED'
-    REGISTERED = 'REGISTERED'
 
     def create_app(self):
         return service.rest.create_app(config_by_name['test']())
@@ -72,9 +79,12 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'parse', return_value=MockCertToken)
     @patch.object(QueryHelper, 'get_infraction_from_id')
     def test_infraction_from_id(self, get_infraction_from_id, parse, payload):
-        get_infraction_from_id.return_value = {'infractionId': '12347', 'infractionType': self.SUSPENDED}
+        get_infraction_from_id.return_value = {self.KEY_INFRACTION_ID: '12347', 'infractionType': self.SUSPENDED}
         response = self.client.get(url_for('get_infraction_id', infractionId='12347'), headers=self.HEADERS)
         self.assertEqual(response.status_code, 200)
+        get_infraction_from_id.assert_called()
+        parse.assert_called()
+        payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
@@ -83,6 +93,9 @@ class TestRest(TestCase):
         get_infraction_from_id.return_value = []
         response = self.client.get(url_for('get_infraction_id', infractionId='12345'), headers=self.HEADERS)
         self.assertEqual(response.status_code, 404)
+        get_infraction_from_id.assert_called()
+        parse.assert_called()
+        payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
@@ -91,6 +104,9 @@ class TestRest(TestCase):
         get_infraction_from_id.side_effect = TypeError()
         response = self.client.get(url_for('get_infraction_id', infractionId='12346'), headers=self.HEADERS)
         self.assertEqual(response.status_code, 422)
+        get_infraction_from_id.assert_called()
+        parse.assert_called()
+        payload.assert_called()
 
     '''Post New Infraction'''
 
@@ -99,51 +115,52 @@ class TestRest(TestCase):
     @patch.object(QueryHelper, 'insert_infraction')
     def test_insert_new_hosted_infraction(self, insert_infraction, parse, payload):
         insert_infraction.return_value = '12345', False
-        data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '133F', 'sourceDomainOrIp': self.TEST_DOMAIN,
+        data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID2, self.KEY_TICKET_ID: '133F', 'sourceDomainOrIp': self.TEST_DOMAIN,
                 'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING,
                 'abuseType': self.PHISHING, 'recordType': 'INFRACTION'}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 201)
+        insert_infraction.assert_called()
+        parse.assert_called()
+        payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
     @patch.object(QueryHelper, 'insert_infraction')
     def test_insert_new_reg_infraction(self, insert_infraction, parse, payload):
         insert_infraction.return_value = '12345', False
-        data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '128F', 'sourceDomainOrIp': self.TEST_DOMAIN,
+        data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID2, self.KEY_TICKET_ID: '128F', 'sourceDomainOrIp': self.TEST_DOMAIN,
                 'hostedStatus': self.REGISTERED, 'domainId': '1234', 'infractionType': self.CUSTOMER_WARNING,
                 'abuseType': self.PHISHING, 'recordType': 'INFRACTION'}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 201)
+        insert_infraction.assert_called()
+        parse.assert_called()
+        payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
     @patch.object(QueryHelper, 'insert_infraction')
     def test_insert_dupe_infraction(self, insert_infraction, parse, payload):
         insert_infraction.return_value = '12345', True
-        data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '129F', 'sourceDomainOrIp': self.TEST_DOMAIN,
+        data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID2, self.KEY_TICKET_ID: '129F', 'sourceDomainOrIp': self.TEST_DOMAIN,
                 'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING,
                 'abuseType': self.PHISHING, 'recordType': 'INFRACTION'}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 200)
+        insert_infraction.assert_called()
+        parse.assert_called()
+        payload.assert_called()
 
-    @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
-    @patch.object(QueryHelper, 'insert_infraction')
-    def test_insert_infraction_validation_error(self, insert_infraction, parse, payload):
-        insert_infraction.side_effect = TypeError()
-        data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '130F', 'sourceDomainOrIp': self.TEST_DOMAIN,
+    def test_insert_infraction_validation_error(self):
+        data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID2, self.KEY_TICKET_ID: '130F', 'sourceDomainOrIp': self.TEST_DOMAIN,
                 'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1, 'infractionType': 'Oops',
                 'recordType': 'INFRACTION'}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 400)
 
-    @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
-    @patch.object(QueryHelper, 'insert_infraction')
-    def test_insert_infraction_when_required_param_missing(self, insert_infraction, parse, payload):
-        insert_infraction.side_effect = TypeError()
-        data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '131F', 'sourceDomainOrIp': self.TEST_DOMAIN,
+    def test_insert_infraction_when_required_param_missing(self):
+        data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID2, self.KEY_TICKET_ID: '131F', 'sourceDomainOrIp': self.TEST_DOMAIN,
                 'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1, 'recordType': 'INFRACTION'}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 400)
@@ -153,33 +170,39 @@ class TestRest(TestCase):
     @patch.object(QueryHelper, 'insert_infraction')
     def test_insert_infraction_with_note_no_ticket_id(self, insert_infraction, parse, payload):
         insert_infraction.return_value = '12346', False
-        data = {'shopperId': self.SHOPPER_ID2, 'sourceDomainOrIp': self.TEST_DOMAIN, 'hostedStatus': self.HOSTED,
+        data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID2, 'sourceDomainOrIp': self.TEST_DOMAIN, 'hostedStatus': self.HOSTED,
                 'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING, 'note': 'manual note',
                 'abuseType': self.PHISHING, 'recordType': 'INFRACTION'}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 201)
+        insert_infraction.assert_called()
+        parse.assert_called()
+        payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
     @patch.object(QueryHelper, 'insert_infraction')
     def test_insert_new_csam_infraction(self, insert_infraction, parse, payload):
         insert_infraction.return_value = '12345', False
-        data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '128F', 'sourceDomainOrIp': 'test-csam-domain.com',
-                'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1, 'infractionType': 'NCMEC_REPORT_SUBMITTED',
-                'abuseType': self.CHILD_ABUSE, 'recordType': 'INFRACTION'}
+        data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID2, self.KEY_TICKET_ID: '128F',
+                'sourceDomainOrIp': 'test-csam-domain.com', 'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1,
+                'infractionType': 'NCMEC_REPORT_SUBMITTED', 'abuseType': self.CHILD_ABUSE, 'recordType': 'INFRACTION'}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 201)
+        insert_infraction.assert_called()
+        parse.assert_called()
+        payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
-    @patch.object(QueryHelper, 'insert_infraction')
-    def test_insert_non_infraction_record_type(self, insert_infraction, parse, payload):
-        insert_infraction.return_value = '12345', False
-        data = {'shopperId': self.SHOPPER_ID2, 'ticketId': '133F', 'sourceDomainOrIp': self.TEST_DOMAIN,
+    def test_insert_non_infraction_record_type(self, parse, payload):
+        data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID2, self.KEY_TICKET_ID: '133F', 'sourceDomainOrIp': self.TEST_DOMAIN,
                 'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING,
                 'abuseType': self.PHISHING, 'recordType': 'NOTE'}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 400)
+        parse.assert_called()
+        payload.assert_called()
 
     '''Post Non Infraction Tests'''
 
@@ -188,27 +211,29 @@ class TestRest(TestCase):
     @patch.object(QueryHelper, 'insert_non_infraction')
     def test_insert_non_infraction_with_note(self, insert_infraction, parse, payload):
         insert_infraction.return_value = '12346', False
-        data = {'shopperId': self.SHOPPER_ID2, 'recordType': 'NOTE', 'sourceDomainOrIp': self.TEST_DOMAIN,
+        data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID2, 'recordType': 'NOTE', 'sourceDomainOrIp': self.TEST_DOMAIN,
                 'note': 'manual note', 'abuseType': self.PHISHING}
         response = self.client.post(url_for('non-infraction'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 201)
+        insert_infraction.assert_called()
+        parse.assert_called()
+        payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
     @patch.object(QueryHelper, 'insert_non_infraction')
     def test_insert_non_infraction_ncmec(self, insert_infraction, parse, payload):
         insert_infraction.return_value = '12346', False
-        data = {'shopperId': self.SHOPPER_ID2, 'recordType': 'NCMEC_REPORT', 'sourceDomainOrIp': self.TEST_DOMAIN,
-                'note': 'manual note', 'abuseType': self.PHISHING}
+        data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID2, 'recordType': 'NCMEC_REPORT',
+                'sourceDomainOrIp': self.TEST_DOMAIN, 'note': 'manual note', 'abuseType': self.PHISHING}
         response = self.client.post(url_for('non-infraction'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 201)
+        insert_infraction.assert_called()
+        parse.assert_called()
+        payload.assert_called()
 
-    @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
-    @patch.object(QueryHelper, 'insert_infraction')
-    def test_insert_non_infraction_required_param_missing(self, insert_infraction, parse, payload):
-        insert_infraction.side_effect = TypeError()
-        data = {'shopperId': self.SHOPPER_ID2, 'sourceDomainOrIp': self.TEST_DOMAIN,
+    def test_insert_non_infraction_required_param_missing(self):
+        data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID2, 'sourceDomainOrIp': self.TEST_DOMAIN,
                 'note': 'manual note', 'abuseType': self.PHISHING}
         response = self.client.post(url_for('non-infraction'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 400)
@@ -217,121 +242,153 @@ class TestRest(TestCase):
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
-    @patch.object(QueryHelper, 'get_infractions')
-    def test_get_matching_hosted_infractions(self, get_infractions, parse, payload):
-        data = {'shopperId': self.SHOPPER_ID1}
-        get_infractions.return_value = [{'infractionId': '5c5cc2b85f627d8562e7f1f3', 'shopperId': self.SHOPPER_ID1,
-                                         'ticketId': '1234', 'sourceDomainOrIp': 'abcs.com',
-                                         'hostingGuid': 'abc123-def456-ghi789', 'infractionType': self.CUSTOMER_WARNING,
-                                         'createdDate': '2019-02-07T23:43:52.471Z'}]
-        response = self.client.get(url_for('infractions'), headers=self.HEADERS, query_string=data)
+    @patch.object(QueryHelper, 'get_history')
+    def test_get_matching_hosted_history(self, get_history, parse, payload):
+        data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1}
+        get_history.return_value = [
+            {self.KEY_INFRACTION_ID: '5c5cc2b85f627d8562e7f1f3', self.KEY_SHOPPER_ID: self.SHOPPER_ID1,
+             self.KEY_TICKET_ID: '1234', 'sourceDomainOrIp': 'abcs.com', 'hostingGuid': 'abc123-def456-ghi789',
+             'infractionType': self.CUSTOMER_WARNING, 'createdDate': '2019-02-07T23:43:52.471Z'}
+        ]
+        response = self.client.get(url_for('history'), headers=self.HEADERS, query_string=data)
         self.assertEqual(response.status_code, 200)
+        get_history.assert_called()
+        parse.assert_called()
+        payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
-    @patch.object(QueryHelper, 'get_infractions')
-    def test_get_infractions_with_infraction_type(self, get_infractions, parse, payload):
-        data = {'shopperId': self.SHOPPER_ID1, 'infractionTypes': [self.CUSTOMER_WARNING, self.SUSPENDED]}
-        get_infractions.return_value = [{'infractionId': '5c5cc2b85f627d8562e7f1f3', 'shopperId': self.SHOPPER_ID1,
-                                         'ticketId': '1234', 'sourceDomainOrIp': 'abcs.com',
-                                         'hostingGuid': 'abc123-def456-ghi789', 'infractionType': self.CUSTOMER_WARNING,
-                                         'createdDate': '2019-02-07T23:43:52.471Z'},
-                                        {'infractionId': '5c5cc2b85f627d8562e7faaa', 'shopperId': self.SHOPPER_ID1,
-                                         'ticketId': '1235', 'sourceDomainOrIp': 'abcs12.com',
-                                         'hostingGuid': 'abc123-def456-ghi789', 'infractionType': self.SUSPENDED,
-                                         'createdDate': '2019-03-07T23:43:52.471Z'}]
-        response = self.client.get(url_for('infractions'), headers=self.HEADERS, query_string=data)
+    @patch.object(QueryHelper, 'get_history')
+    def test_get_history_with_infraction_type(self, get_history, parse, payload):
+        data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1, 'infractionTypes': [self.CUSTOMER_WARNING, self.SUSPENDED]}
+        get_history.return_value = [
+            {self.KEY_INFRACTION_ID: '5c5cc2b85f627d8562e7f1f3', self.KEY_SHOPPER_ID: self.SHOPPER_ID1,
+             self.KEY_TICKET_ID: '1234', 'sourceDomainOrIp': 'abcs.com', 'hostingGuid': 'abc123-def456-ghi789',
+             'infractionType': self.CUSTOMER_WARNING, 'createdDate': '2019-02-07T23:43:52.471Z'},
+            {self.KEY_INFRACTION_ID: '5c5cc2b85f627d8562e7faaa', self.KEY_SHOPPER_ID: self.SHOPPER_ID1,
+             self.KEY_TICKET_ID: '1235', 'sourceDomainOrIp': 'abcs12.com', 'hostingGuid': 'abc123-def456-ghi789',
+             'infractionType': self.SUSPENDED, 'createdDate': '2019-03-07T23:43:52.471Z'}
+        ]
+        response = self.client.get(url_for('history'), headers=self.HEADERS, query_string=data)
         self.assertEqual(response.status_code, 200)
+        get_history.assert_called()
+        parse.assert_called()
+        payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
-    @patch.object(QueryHelper, 'get_infractions')
-    def test_get_matching_reg_infractions(self, get_infractions, parse, payload):
-        data = {'shopperId': self.SHOPPER_ID1, 'hostedStatus': self.REGISTERED}
-        get_infractions.return_value = [{'infractionId': '5c5cc2b85f627d8562e7f1f3', 'shopperId': self.SHOPPER_ID1,
-                                         'ticketId': '1234', 'sourceDomainOrIp': 'abcs.com',
-                                         'domainId': '12345', 'infractionType': 'CUSTOMER_WARNING',
-                                         'createdDate': '2019-02-07T23:43:52.471Z'}]
-        response = self.client.get(url_for('infractions'), headers=self.HEADERS, query_string=data)
+    @patch.object(QueryHelper, 'get_history')
+    def test_get_matching_reg_history(self, get_history, parse, payload):
+        data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1, 'hostedStatus': self.REGISTERED}
+        get_history.return_value = [
+            {self.KEY_INFRACTION_ID: '5c5cc2b85f627d8562e7f1f3', self.KEY_SHOPPER_ID: self.SHOPPER_ID1,
+             self.KEY_TICKET_ID: '1234', 'sourceDomainOrIp': 'abcs.com', 'domainId': '12345',
+             'infractionType': 'CUSTOMER_WARNING', 'createdDate': '2019-02-07T23:43:52.471Z'}
+        ]
+        response = self.client.get(url_for('history'), headers=self.HEADERS, query_string=data)
         self.assertEqual(response.status_code, 200)
+        get_history.assert_called()
+        parse.assert_called()
+        payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
-    @patch.object(QueryHelper, 'get_infractions')
-    def test_get_no_matching_infractions(self, get_infractions, parse, payload):
-        data = {'shopperId': self.SHOPPER_ID1}
-        get_infractions.return_value = []
-        response = self.client.get(url_for('infractions'), headers=self.HEADERS, query_string=data)
-        self.assertIsNone(response.json.get('pagination', {}).get('next'))
+    @patch.object(QueryHelper, 'get_history')
+    def test_get_no_matching_history(self, get_history, parse, payload):
+        data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1}
+        get_history.return_value = []
+        response = self.client.get(url_for('history'), headers=self.HEADERS, query_string=data)
+        self.assertIsNone(response.json.get(self.KEY_PAGINATION, {}).get(self.KEY_NEXT))
+        get_history.assert_called()
+        parse.assert_called()
+        payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
-    @patch.object(QueryHelper, 'get_infractions')
-    def test_get_no_matching_infractions_error(self, get_infractions, parse, payload):
+    @patch.object(QueryHelper, 'get_history')
+    def test_get_no_matching_history_error(self, get_history, parse, payload):
         data = {'infractionTypes': 'IT_BAD'}
-        get_infractions.side_effect = TypeError()
-        response = self.client.get(url_for('infractions'), headers=self.HEADERS, query_string=data)
+        get_history.side_effect = TypeError()
+        response = self.client.get(url_for('history'), headers=self.HEADERS, query_string=data)
         self.assertEqual(response.status_code, 422)
+        get_history.assert_called()
+        parse.assert_called()
+        payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
-    @patch.object(QueryHelper, 'get_infractions')
-    def test_get_infraction_type_error(self, get_infractions, parse, payload):
-        data = {'infractionTypes': 'INTENTIONALLY_MALICIOUS', 'shopperId': self.SHOPPER_ID1}
-        get_infractions.side_effect = TypeError()
-        response = self.client.get(url_for('infractions'), headers=self.HEADERS, query_string=data)
+    @patch.object(QueryHelper, 'get_history')
+    def test_get_history_type_error(self, get_history, parse, payload):
+        data = {'infractionTypes': 'INTENTIONALLY_MALICIOUS', self.KEY_SHOPPER_ID: self.SHOPPER_ID1}
+        get_history.side_effect = TypeError()
+        response = self.client.get(url_for('history'), headers=self.HEADERS, query_string=data)
         self.assertEqual(response.status_code, 422)
+        get_history.assert_called()
+        parse.assert_called()
+        payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
-    @patch.object(QueryHelper, 'get_infractions')
-    def test_get_none_infraction_type(self, get_infractions, parse, payload):
+    @patch.object(QueryHelper, 'get_history')
+    def test_get_none_infraction_type(self, get_history, parse, payload):
         data = {'infractionTypes': None}
-        get_infractions.side_effect = TypeError()
-        response = self.client.get(url_for('infractions'), headers=self.HEADERS, query_string=data)
+        get_history.side_effect = TypeError()
+        response = self.client.get(url_for('history'), headers=self.HEADERS, query_string=data)
         self.assertEqual(response.status_code, 422)
+        get_history.assert_called()
+        parse.assert_called()
+        payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
-    @patch.object(QueryHelper, 'get_infractions')
-    def test_get_infraction_count_less_than_limit(self, get_infractions, parse, payload):
-        data = {'shopperId': self.SHOPPER_ID1}
-        response = self.client.get(url_for('infractions'), headers=self.HEADERS, query_string=data)
-        self.assertIsNone(response.json.get('pagination', {}).get('next'))
+    @patch.object(QueryHelper, 'get_history')
+    def test_get_infraction_count_less_than_limit(self, get_history, parse, payload):
+        data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1}
+        response = self.client.get(url_for('history'), headers=self.HEADERS, query_string=data)
+        self.assertIsNone(response.json.get(self.KEY_PAGINATION, {}).get(self.KEY_NEXT))
+        get_history.assert_called()
+        parse.assert_called()
+        payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
-    @patch.object(QueryHelper, 'get_infractions')
-    def test_pagination_invalid_prev_url(self, get_infractions, parse, payload):
-        data = {'shopperId': self.SHOPPER_ID1, 'offset': 0, 'limit': 2}
-        get_infractions.return_value = [
-            {'infractionId': '1', 'shopperId': self.SHOPPER_ID1, 'ticketId': '1234'},
-            {'infractionId': '2', 'shopperId': self.SHOPPER_ID1, 'ticketId': '1235'},
-            {'infractionId': '3', 'shopperId': self.SHOPPER_ID1, 'ticketId': '1236'},
-            {'infractionId': '4', 'shopperId': self.SHOPPER_ID1, 'ticketId': '1237'}
+    @patch.object(QueryHelper, 'get_history')
+    def test_history_pagination_invalid_prev_url(self, get_history, parse, payload):
+        data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1, 'offset': 0, 'limit': 2}
+        get_history.return_value = [
+            {self.KEY_INFRACTION_ID: '1', self.KEY_SHOPPER_ID: self.SHOPPER_ID1, self.KEY_TICKET_ID: '1234'},
+            {self.KEY_INFRACTION_ID: '2', self.KEY_SHOPPER_ID: self.SHOPPER_ID1, self.KEY_TICKET_ID: '1235'},
+            {self.KEY_INFRACTION_ID: '3', self.KEY_SHOPPER_ID: self.SHOPPER_ID1, self.KEY_TICKET_ID: '1236'},
+            {self.KEY_INFRACTION_ID: '4', self.KEY_SHOPPER_ID: self.SHOPPER_ID1, self.KEY_TICKET_ID: '1237'}
         ]
-        response = self.client.get(url_for('infractions'), headers=self.HEADERS, query_string=data)
-        next_url = response.json.get('pagination', {}).get('next')
-        prev_url = response.json.get('pagination', {}).get('prev')
-        self.assertEqual(next_url, 'http://localhost/v1/infractions?shopperId={}&limit=2&recordType=INFRACTION&offset=2'.format(self.SHOPPER_ID1))
-        self.assertEqual(prev_url, 'http://localhost/v1/infractions?shopperId={}&limit=2&recordType=INFRACTION&offset=0'.format(self.SHOPPER_ID1))
+        response = self.client.get(url_for('history'), headers=self.HEADERS, query_string=data)
+        next_url = response.json.get(self.KEY_PAGINATION, {}).get(self.KEY_NEXT)
+        prev_url = response.json.get(self.KEY_PAGINATION, {}).get(self.KEY_PREV)
+        self.assertEqual(next_url, f'{self.GET_HISTORY_URL}?shopperId={self.SHOPPER_ID1}&limit=2&offset=2')
+        self.assertEqual(prev_url, f'{self.GET_HISTORY_URL}?shopperId={self.SHOPPER_ID1}&limit=2&offset=0')
+        get_history.assert_called()
+        parse.assert_called()
+        payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
-    @patch.object(QueryHelper, 'get_infractions')
-    def test_pagination_valid_prev_url(self, get_infractions, parse, payload):
-        data = {'shopperId': self.SHOPPER_ID1, 'offset': 3, 'limit': 2}
-        get_infractions.return_value = [
-            {'infractionId': '1', 'shopperId': self.SHOPPER_ID1, 'ticketId': '1334'},
-            {'infractionId': '2', 'shopperId': self.SHOPPER_ID1, 'ticketId': '1335'},
-            {'infractionId': '3', 'shopperId': self.SHOPPER_ID1, 'ticketId': '1336'},
-            {'infractionId': '4', 'shopperId': self.SHOPPER_ID1, 'ticketId': '1337'}
+    @patch.object(QueryHelper, 'get_history')
+    def test_history_pagination_valid_prev_url(self, get_history, parse, payload):
+        data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1, 'offset': 3, 'limit': 2}
+        get_history.return_value = [
+            {self.KEY_INFRACTION_ID: '1', self.KEY_SHOPPER_ID: self.SHOPPER_ID1, self.KEY_TICKET_ID: '1334'},
+            {self.KEY_INFRACTION_ID: '2', self.KEY_SHOPPER_ID: self.SHOPPER_ID1, self.KEY_TICKET_ID: '1335'},
+            {self.KEY_INFRACTION_ID: '3', self.KEY_SHOPPER_ID: self.SHOPPER_ID1, self.KEY_TICKET_ID: '1336'},
+            {self.KEY_INFRACTION_ID: '4', self.KEY_SHOPPER_ID: self.SHOPPER_ID1, self.KEY_TICKET_ID: '1337'}
         ]
-        response = self.client.get(url_for('infractions'), headers=self.HEADERS, query_string=data)
-        next_url = response.json.get('pagination', {}).get('next')
-        prev_url = response.json.get('pagination', {}).get('prev')
-        self.assertEqual(next_url, 'http://localhost/v1/infractions?shopperId={}&limit=2&recordType=INFRACTION&offset=5'.format(self.SHOPPER_ID1))
-        self.assertEqual(prev_url, 'http://localhost/v1/infractions?shopperId={}&limit=2&recordType=INFRACTION&offset=1'.format(self.SHOPPER_ID1))
+        response = self.client.get(url_for('history'), headers=self.HEADERS, query_string=data)
+        next_url = response.json.get(self.KEY_PAGINATION, {}).get(self.KEY_NEXT)
+        prev_url = response.json.get(self.KEY_PAGINATION, {}).get(self.KEY_PREV)
+        self.assertEqual(next_url, f'{self.GET_HISTORY_URL}?shopperId={self.SHOPPER_ID1}&limit=2&offset=5')
+        self.assertEqual(prev_url, f'{self.GET_HISTORY_URL}?shopperId={self.SHOPPER_ID1}&limit=2&offset=1')
+        get_history.assert_called()
+        parse.assert_called()
+        payload.assert_called()
 
     '''Infraction Count Tests'''
 
@@ -339,44 +396,57 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
     @patch.object(QueryHelper, 'count_infractions')
     def test_count_infractions_pass_nonzero_count(self, count_infractions, parse, payload):
-        data = {'shopperId': self.SHOPPER_ID1}
+        data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1}
         count_infractions.return_value = 12
         response = self.client.get(url_for('infraction_count'), headers=self.HEADERS, query_string=data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(int(response.data), 12)
+        count_infractions.assert_called()
+        parse.assert_called()
+        payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
     @patch.object(QueryHelper, 'count_infractions')
     def test_count_infractions_pass_zero_count(self, count_infractions, parse, payload):
-        data = {'shopperId': self.SHOPPER_ID1}
+        data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1}
         count_infractions.return_value = 0
         response = self.client.get(url_for('infraction_count'), headers=self.HEADERS, query_string=data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(int(response.data), 0)
+        count_infractions.assert_called()
+        parse.assert_called()
+        payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
-    @patch.object(QueryHelper, 'count_infractions')
-    def test_count_infractions_fail_empty_query(self, count_infractions, parse, payload):
+    def test_count_infractions_fail_empty_query(self, parse, payload):
         response = self.client.get(url_for('infraction_count'), headers=self.HEADERS, query_string={})
         self.assertEqual(response.status_code, 422)
+        parse.assert_called()
+        payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
     @patch.object(QueryHelper, 'count_infractions')
     def test_count_infractions_pass_unknown_key_query(self, count_infractions, parse, payload):
-        data = {'unknownKey': 'Value for Unknown Key', 'shopperId': self.SHOPPER_ID1}
+        data = {'unknownKey': 'Value for Unknown Key', self.KEY_SHOPPER_ID: self.SHOPPER_ID1}
         count_infractions.return_value = 12
         response = self.client.get(url_for('infraction_count'), headers=self.HEADERS, query_string=data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(int(response.data), 12)
+        count_infractions.assert_called()
+        parse.assert_called()
+        payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
     @patch.object(QueryHelper, 'count_infractions')
     def test_count_infractions_fail_type_error(self, count_infractions, parse, payload):
-        data = {'infractionTypes': 'INTENTIONALLY_MALICIOUS', 'shopperId': self.SHOPPER_ID1}
+        data = {'infractionTypes': 'INTENTIONALLY_MALICIOUS', self.KEY_SHOPPER_ID: self.SHOPPER_ID1}
         count_infractions.side_effect = TypeError()
         response = self.client.get(url_for('infraction_count'), headers=self.HEADERS, query_string=data)
         self.assertEqual(response.status_code, 422)
+        count_infractions.assert_called()
+        parse.assert_called()
+        payload.assert_called()
