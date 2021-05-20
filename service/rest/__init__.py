@@ -1,7 +1,9 @@
+from dcustructuredloggingflask.flasklogger import add_request_logging
 from flask import Flask
-from flask_restplus import Api
-from .api import api as ns1
 from flask_cors import CORS
+from flask_restplus import Api
+
+from .api import api as ns1
 
 
 def create_app(config):
@@ -30,4 +32,8 @@ def create_app(config):
     api.add_namespace(ns1)
     CORS(app, origins=['http://localhost:5000', 'http://127.0.0.1:5000', r'^https.*(-|\.)godaddy.com.*$'],
          supports_credentials=True)
+    add_request_logging(app, 'dcu-mimir-api', sso=config.TOKEN_AUTHORITY, excluded_paths=[
+        '/doc/',
+        '/v1/health'
+    ])
     return app

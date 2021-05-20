@@ -9,6 +9,7 @@ BUILD_BRANCH=origin/master
 # libraries we need to stage for pip to install inside Docker build
 
 PRIVATE_PIPS="git@github.secureserver.net:auth-contrib/PyAuth.git" \
+"git@github.com:gdcorp-infosec/dcu-structured-logging-flask.git" \
 git@github.secureserver.net:digital-crimes/dcdatabase.git
 
 .PHONY: prep flake8 isort tools test testcov dev stage prod ote clean prod-deploy ote-deploy dev-deploy
@@ -26,7 +27,7 @@ flake8:
 
 isort:
 	@echo "----- Optimizing imports -----"
-	isort -rc --atomic .
+	python -m isort --atomic --skip .venv .
 
 tools: flake8 isort
 
