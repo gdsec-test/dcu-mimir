@@ -33,7 +33,8 @@ def create_app(config):
     CORS(app, origins=['http://localhost:5000', 'http://127.0.0.1:5000', r'^https.*(-|\.)godaddy.com.*$'],
          supports_credentials=True)
     add_request_logging(app, 'dcu-mimir-api', sso=config.TOKEN_AUTHORITY, excluded_paths=[
-        '/doc/',
+        '/doc',
+        '/swagger',
         '/v1/health'
     ])
     return app
