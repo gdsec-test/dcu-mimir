@@ -9,12 +9,8 @@ EXPOSE 5000
 COPY ./*.ini ./*.py ./runserver.sh /app/
 COPY . /tmp
 
-# pip install private pips staged by Makefile
 RUN apt-get update && apt-get install gcc -y
-RUN pip install --compile /tmp/private_pips/PyAuth
-RUN pip install --compile /tmp/private_pips/dcdatabase
-RUN pip install --compile /tmp/private_pips/dcu-structured-logging-flask
-RUN pip install --compile /tmp
+RUN PIP_CONFIG_FILE=/tmp/pip_config/pip.conf pip install --compile /tmp
 RUN apt-get remove -y gcc
 
 # cleanup
