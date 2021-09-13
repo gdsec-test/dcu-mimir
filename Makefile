@@ -4,7 +4,7 @@ DOCKERREPO=docker-dcu-local.artifactory.secureserver.net/mimir
 SHELL=/bin/bash
 DATE=$(shell date)
 COMMIT=
-BUILD_BRANCH=origin/master
+BUILD_BRANCH=origin/main
 
 .PHONY: prep flake8 isort tools test testcov dev stage prod ote clean prod-deploy ote-deploy dev-deploy
 
