@@ -43,7 +43,7 @@ spec:
           - name: DB_PASS
             valueFrom:
               secretKeyRef:
-                name: db-mimir
+                name: db-phishstory-v2
                 key: password
           - name: REDIS
             value: mimir-redis.abuse-api-prod.svc.cluster.local

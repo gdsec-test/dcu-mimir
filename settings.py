@@ -19,7 +19,7 @@ class ProductionAppConfig(AppConfig):
     CN_WHITELIST = {'dcu.zeus.int.godaddy.com', 'godaddy-service.int.godaddy.com', 'kelvin.int.godaddy.com'}
     DB = 'phishstory'
     DB_HOST = '10.22.9.209'
-    DB_USER = 'sau_p_phish'
+    DB_USER = 'sau_p_phishv2'
 
     def __init__(self):
         super(ProductionAppConfig, self).__init__()
