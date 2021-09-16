@@ -6,7 +6,8 @@ from urllib.parse import urlencode, urlparse, urlunparse
 
 from flask import abort, current_app, request
 from flask_restplus import Namespace, Resource, fields, reqparse
-from gd_auth.token import AuthToken
+from gd_auth.exceptions import TokenExpiredException
+from gd_auth.token import AuthToken, TokenBusinessLevel
 from redlock import RedLockError
 
 from service.utils.query_helper import QueryHelper
@@ -191,6 +192,11 @@ def token_required(f):
             payload = AuthToken.payload(token)
             typ = payload.get('typ')
             parsed = AuthToken.parse(token, token_authority, 'Mimir', typ)
+
+            try:
+                parsed.is_expired(TokenBusinessLevel.LOW)
+            except TokenExpiredException:
+                return {'message': 'JWT not valid'}, 401
 
             if typ == 'jomax':
                 approved_groups = set(parsed.payload.get('groups', []))

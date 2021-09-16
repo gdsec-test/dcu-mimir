@@ -28,6 +28,9 @@ class MockCertToken:
         'sbj': subject
     }
 
+    def is_expired(self, _):
+        return False
+
 
 class MockJomaxToken:
     payload = {
@@ -39,6 +42,9 @@ class MockJomaxToken:
         'accountName': 'test_user',
         'groups': ['DCU-Phishstory']
     }
+
+    def is_expired(self, _):
+        return False
 
 
 class TestRest(TestCase):
@@ -76,7 +82,7 @@ class TestRest(TestCase):
     '''Get Infraction by Infraction ID Tests'''
 
     @patch.object(AuthToken, 'payload', return_value=MockCertToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockCertToken)
+    @patch.object(AuthToken, 'parse', return_value=MockCertToken())
     @patch.object(QueryHelper, 'get_infraction_from_id')
     def test_infraction_from_id(self, get_infraction_from_id, parse, payload):
         get_infraction_from_id.return_value = {self.KEY_INFRACTION_ID: '12347', 'infractionType': self.SUSPENDED}
@@ -87,7 +93,7 @@ class TestRest(TestCase):
         payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(QueryHelper, 'get_infraction_from_id')
     def test_no_infraction_from_id(self, get_infraction_from_id, parse, payload):
         get_infraction_from_id.return_value = []
@@ -98,7 +104,7 @@ class TestRest(TestCase):
         payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(QueryHelper, 'get_infraction_from_id')
     def test_infraction_id_validation_error(self, get_infraction_from_id, parse, payload):
         get_infraction_from_id.side_effect = TypeError()
@@ -111,7 +117,7 @@ class TestRest(TestCase):
     '''Post New Infraction'''
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(QueryHelper, 'insert_infraction')
     def test_insert_new_hosted_infraction(self, insert_infraction, parse, payload):
         insert_infraction.return_value = '12345', False
@@ -125,7 +131,7 @@ class TestRest(TestCase):
         payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(QueryHelper, 'insert_infraction')
     def test_insert_new_reg_infraction(self, insert_infraction, parse, payload):
         insert_infraction.return_value = '12345', False
@@ -139,7 +145,7 @@ class TestRest(TestCase):
         payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(QueryHelper, 'insert_infraction')
     def test_insert_dupe_infraction(self, insert_infraction, parse, payload):
         insert_infraction.return_value = '12345', True
@@ -166,7 +172,7 @@ class TestRest(TestCase):
         self.assertEqual(response.status_code, 400)
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(QueryHelper, 'insert_infraction')
     def test_insert_infraction_with_note_no_ticket_id(self, insert_infraction, parse, payload):
         insert_infraction.return_value = '12346', False
@@ -180,7 +186,7 @@ class TestRest(TestCase):
         payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(QueryHelper, 'insert_infraction')
     def test_insert_new_csam_infraction(self, insert_infraction, parse, payload):
         insert_infraction.return_value = '12345', False
@@ -194,7 +200,7 @@ class TestRest(TestCase):
         payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     def test_insert_non_infraction_record_type(self, parse, payload):
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID2, self.KEY_TICKET_ID: '133F', 'sourceDomainOrIp': self.TEST_DOMAIN,
                 'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING,
@@ -207,7 +213,7 @@ class TestRest(TestCase):
     '''Post Non Infraction Tests'''
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(QueryHelper, 'insert_non_infraction')
     def test_insert_non_infraction_with_note(self, insert_infraction, parse, payload):
         insert_infraction.return_value = '12346', False
@@ -220,7 +226,7 @@ class TestRest(TestCase):
         payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(QueryHelper, 'insert_non_infraction')
     def test_insert_non_infraction_ncmec(self, insert_infraction, parse, payload):
         insert_infraction.return_value = '12346', False
@@ -241,7 +247,7 @@ class TestRest(TestCase):
     '''Get Infractions Tests'''
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(QueryHelper, 'get_history')
     def test_get_matching_hosted_history(self, get_history, parse, payload):
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1}
@@ -257,7 +263,7 @@ class TestRest(TestCase):
         payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(QueryHelper, 'get_history')
     def test_get_history_with_infraction_type(self, get_history, parse, payload):
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1, 'infractionTypes': [self.CUSTOMER_WARNING, self.SUSPENDED]}
@@ -276,7 +282,7 @@ class TestRest(TestCase):
         payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(QueryHelper, 'get_history')
     def test_get_matching_reg_history(self, get_history, parse, payload):
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1, 'hostedStatus': self.REGISTERED}
@@ -292,7 +298,7 @@ class TestRest(TestCase):
         payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(QueryHelper, 'get_history')
     def test_get_no_matching_history(self, get_history, parse, payload):
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1}
@@ -304,7 +310,7 @@ class TestRest(TestCase):
         payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(QueryHelper, 'get_history')
     def test_get_no_matching_history_error(self, get_history, parse, payload):
         data = {'infractionTypes': 'IT_BAD'}
@@ -316,7 +322,7 @@ class TestRest(TestCase):
         payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(QueryHelper, 'get_history')
     def test_get_history_type_error(self, get_history, parse, payload):
         data = {'infractionTypes': 'INTENTIONALLY_MALICIOUS', self.KEY_SHOPPER_ID: self.SHOPPER_ID1}
@@ -328,7 +334,7 @@ class TestRest(TestCase):
         payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(QueryHelper, 'get_history')
     def test_get_none_infraction_type(self, get_history, parse, payload):
         data = {'infractionTypes': None}
@@ -340,7 +346,7 @@ class TestRest(TestCase):
         payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(QueryHelper, 'get_history')
     def test_get_infraction_count_less_than_limit(self, get_history, parse, payload):
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1}
@@ -351,7 +357,7 @@ class TestRest(TestCase):
         payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(QueryHelper, 'get_history')
     def test_history_pagination_invalid_prev_url(self, get_history, parse, payload):
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1, 'offset': 0, 'limit': 2}
@@ -371,7 +377,7 @@ class TestRest(TestCase):
         payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(QueryHelper, 'get_history')
     def test_history_pagination_valid_prev_url(self, get_history, parse, payload):
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1, 'offset': 3, 'limit': 2}
@@ -393,7 +399,7 @@ class TestRest(TestCase):
     '''Infraction Count Tests'''
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(QueryHelper, 'count_infractions')
     def test_count_infractions_pass_nonzero_count(self, count_infractions, parse, payload):
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1}
@@ -406,7 +412,7 @@ class TestRest(TestCase):
         payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(QueryHelper, 'count_infractions')
     def test_count_infractions_pass_zero_count(self, count_infractions, parse, payload):
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1}
@@ -419,7 +425,7 @@ class TestRest(TestCase):
         payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     def test_count_infractions_fail_empty_query(self, parse, payload):
         response = self.client.get(url_for('infraction_count'), headers=self.HEADERS, query_string={})
         self.assertEqual(response.status_code, 422)
@@ -427,7 +433,7 @@ class TestRest(TestCase):
         payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(QueryHelper, 'count_infractions')
     def test_count_infractions_pass_unknown_key_query(self, count_infractions, parse, payload):
         data = {'unknownKey': 'Value for Unknown Key', self.KEY_SHOPPER_ID: self.SHOPPER_ID1}
@@ -440,7 +446,7 @@ class TestRest(TestCase):
         payload.assert_called()
 
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
-    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken)
+    @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(QueryHelper, 'count_infractions')
     def test_count_infractions_fail_type_error(self, count_infractions, parse, payload):
         data = {'infractionTypes': 'INTENTIONALLY_MALICIOUS', self.KEY_SHOPPER_ID: self.SHOPPER_ID1}
