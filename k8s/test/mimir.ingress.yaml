@@ -1,0 +1,19 @@
+---
+apiVersion: "networking.k8s.io/v1beta1"
+kind: "Ingress"
+metadata:
+  name: "mimir"
+  namespace: "abuse-api-test"
+spec:
+  tls:
+    - hosts:
+      - "mimir.int.test-godaddy.com"
+      secretName: tls-mimir
+  rules:
+  - host: "mimir.int.test-godaddy.com"
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: "mimir"
+          servicePort: 5000

@@ -1,0 +1,37 @@
+---
+apiVersion: "apps/v1"
+kind: "Deployment"
+metadata:
+  name: "mimir-redis"
+  namespace: "abuse-api-test"
+  labels:
+    app: "mimir-redis"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "mimir-redis"
+  template:
+    metadata:
+      labels:
+        app: "mimir-redis"
+    spec:
+      imagePullSecrets:
+        -
+          name: "k8s-artifactory-creds"
+
+      containers:
+        -
+          name: "redis"
+          imagePullPolicy: "Always"
+          image: "redis"
+          ports:
+            -
+              containerPort: 6379
+              protocol: "TCP"
+          livenessProbe:
+            exec:
+              command:
+              - sh
+              - -c
+              - "redis-cli ping"

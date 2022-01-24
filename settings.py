@@ -47,7 +47,18 @@ class DevelopmentAppConfig(AppConfig):
         super(DevelopmentAppConfig, self).__init__()
 
 
-class TestingConfig(AppConfig):
+class TestAppConfig(AppConfig):
+    TOKEN_AUTHORITY = 'sso.test-godaddy.com'
+    CN_WHITELIST = {'dcu.zeus.int.test-godaddy.com', 'godaddy-service.int.test-godaddy.com', 'kelvin.int.test-godaddy.com'}
+    DB = 'testphishstory'
+    DB_HOST = '10.36.156.188'
+    DB_USER = 'testuser'
+
+    def __init__(self):
+        super(TestAppConfig, self).__init__()
+
+
+class UnitTestConfig(AppConfig):
     TOKEN_AUTHORITY = 'test'
     CN_WHITELIST = {'dcu.zeus.int.test-godaddy.com'}
     DBURL = 'mongodb://localhost/devphishstory'
@@ -58,4 +69,5 @@ class TestingConfig(AppConfig):
 config_by_name = {'dev': DevelopmentAppConfig,
                   'prod': ProductionAppConfig,
                   'ote': OTEAppConfig,
-                  'test': TestingConfig}
+                  'unit-test': UnitTestConfig,
+                  'test': TestAppConfig}

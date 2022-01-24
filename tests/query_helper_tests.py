@@ -14,7 +14,7 @@ from settings import config_by_name
 
 
 class TestQueryHelper(TestCase):
-    test_config = config_by_name['test']()
+    test_config = config_by_name['unit-test']()
     ABUSE_TYPE = 'PHISHING'
     DOMAIN = 'abc.com'
     DOMAIN_ID = '10101'

@@ -68,7 +68,7 @@ class TestRest(TestCase):
     TEST_DOMAIN = 'test-domain.com'
 
     def create_app(self):
-        return service.rest.create_app(config_by_name['test']())
+        return service.rest.create_app(config_by_name['unit-test']())
 
     def setup(self):
         self.client = self.app.test_client()

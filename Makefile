@@ -24,7 +24,7 @@ isort:
 
 tools: flake8 isort
 
-test:
+test: tools
 	@echo "----- Running tests -----"
 	nosetests tests
 
@@ -56,6 +56,11 @@ ote: prep
 	sed -ie 's/THIS_STRING_IS_REPLACED_DURING_BUILD/$(DATE)/g' $(BUILDROOT)/k8s/ote/mimir.deployment.yaml
 	docker build -t $(DOCKERREPO):ote $(BUILDROOT)
 
+test-env: prep
+	@echo "----- building $(REPONAME) test -----"
+	sed -ie 's/THIS_STRING_IS_REPLACED_DURING_BUILD/$(DATE)/g' $(BUILDROOT)/k8s/test/mimir.deployment.yaml
+	docker build -t $(DOCKERREPO):test $(BUILDROOT)
+
 dev: prep
 	@echo "----- building $(REPONAME) dev -----"
 	sed -ie 's/THIS_STRING_IS_REPLACED_DURING_BUILD/$(DATE)/g' $(BUILDROOT)/k8s/dev/mimir.deployment.yaml
@@ -64,17 +69,26 @@ dev: prep
 prod-deploy: prod
 	@echo "----- deploying $(REPONAME) prod -----"
 	docker push $(DOCKERREPO):$(COMMIT)
-	kubectl --context prod-dcu apply -f $(BUILDROOT)/k8s/prod/mimir.deployment.yaml --record
+	kubectl --context prod-dcu apply -f $(BUILDROOT)/k8s/prod/mimir.deployment.yaml
 
 ote-deploy: ote
 	@echo "----- deploying $(REPONAME) ote -----"
 	docker push $(DOCKERREPO):ote
-	kubectl --context ote-dcu apply -f $(BUILDROOT)/k8s/ote/mimir.deployment.yaml --record
+	kubectl --context ote-dcu apply -f $(BUILDROOT)/k8s/ote/mimir.deployment.yaml
+
+test-deploy: test-env
+	@echo "----- deploying $(REPONAME) test -----"
+	docker push $(DOCKERREPO):test
+	kubectl --context test-dcu apply -f $(BUILDROOT)/k8s/test/mimir.deployment.yaml
+	kubectl --context test-dcu apply -f $(BUILDROOT)/k8s/test/mimir_redis.deployment.yaml
+	kubectl --context test-dcu apply -f $(BUILDROOT)/k8s/test/mimir.service.yaml
+	kubectl --context test-dcu apply -f $(BUILDROOT)/k8s/test/mimir_redis.service.yaml
+	kubectl --context test-dcu apply -f $(BUILDROOT)/k8s/test/mimir.ingress.yaml
 
 dev-deploy: dev
 	@echo "----- deploying $(REPONAME) dev -----"
 	docker push $(DOCKERREPO):dev
-	kubectl --context dev-dcu apply -f $(BUILDROOT)/k8s/dev/mimir.deployment.yaml --record
+	kubectl --context dev-dcu apply -f $(BUILDROOT)/k8s/dev/mimir.deployment.yaml
 
 clean:
 	@echo "----- cleaning $(REPONAME) app -----"
