@@ -47,3 +47,13 @@ spec:
                 key: password
           - name: REDIS
             value: mimir-redis.abuse-api-ote.svc.cluster.local
+          - name: ELASTIC_APM_SERVER_URL
+            valueFrom:
+              secretKeyRef:
+                name: apm-access
+                key: url
+          - name: ELASTIC_APM_SECRET_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: apm-access
+                key: secret
