@@ -40,7 +40,7 @@ class DevelopmentAppConfig(AppConfig):
     TOKEN_AUTHORITY = 'sso.dev-godaddy.com'
     CN_WHITELIST = {'dcu.zeus.int.dev-godaddy.com', 'godaddy-service.int.dev-godaddy.com', 'kelvin.int.dev-godaddy.com'}
     DB = 'devphishstory'
-    DB_HOST = '10.36.156.188'
+    DB_HOST = '10.36.190.222'
     DB_USER = 'devuser'
 
     def __init__(self):
@@ -51,7 +51,7 @@ class TestAppConfig(AppConfig):
     TOKEN_AUTHORITY = 'sso.test-godaddy.com'
     CN_WHITELIST = {'dcu.zeus.int.test-godaddy.com', 'godaddy-service.int.test-godaddy.com', 'kelvin.int.test-godaddy.com'}
     DB = 'testphishstory'
-    DB_HOST = '10.36.156.188'
+    DB_HOST = '10.36.190.222'
     DB_USER = 'testuser'
 
     def __init__(self):
