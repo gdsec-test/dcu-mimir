@@ -2,11 +2,13 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
 - ../base
-- ingress.yaml
+- mimir.ingress.yaml
 
 namespace: abuse-api-dev
 images:
 - name: docker-dcu-local.artifactory.secureserver.net/dcu-mimir
+  newTag: dev
+- name: docker-dcu-local.artifactory.secureserver.net/mimir
   newTag: dev
 
 configMapGenerator:
