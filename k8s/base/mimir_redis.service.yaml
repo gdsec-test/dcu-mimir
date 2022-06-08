@@ -7,7 +7,6 @@
     # this name is accessible via cluster DNS
     # ("mimir-redis" or "mimir-redis.<namespace>.svc.cluster.local")
     name: "mimir-redis"
-    namespace: abuse-api-test
   spec:
     ports:
       -

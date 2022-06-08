@@ -3,7 +3,6 @@ apiVersion: "apps/v1"
 kind: "Deployment"
 metadata:
   name: "mimir-redis"
-  namespace: "abuse-api-dev"
   labels:
     app: "mimir-redis"
 spec:

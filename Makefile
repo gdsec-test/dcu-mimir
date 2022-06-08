@@ -6,6 +6,13 @@ DATE=$(shell date)
 COMMIT=
 BUILD_BRANCH=origin/main
 
+define deploy_k8s
+	docker push $(DOCKERREPO):$(2)
+	cd k8s/$(1) && kustomize edit set image $$(docker inspect --format='{{index .RepoDigests 0}}' $(DOCKERREPO):$(2))
+	kubectl --context $(1)-dcu apply -k k8s/$(1)
+	cd k8s/$(1) && kustomize edit set image $(DOCKERREPO):$(1)
+endef
+
 .PHONY: prep flake8 isort tools test testcov dev stage prod ote clean prod-deploy ote-deploy dev-deploy
 
 all: env
@@ -87,8 +94,7 @@ test-deploy: test-env
 
 dev-deploy: dev
 	@echo "----- deploying $(REPONAME) dev -----"
-	docker push $(DOCKERREPO):dev
-	kubectl --context dev-dcu apply -f $(BUILDROOT)/k8s/dev/mimir.deployment.yaml
+	$(call deploy_k8s,dev,dev)
 
 clean:
 	@echo "----- cleaning $(REPONAME) app -----"

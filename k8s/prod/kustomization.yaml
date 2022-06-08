@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../base
+- ingress.yaml
+
+namespace: abuse-api-prod
+images:
+- name: docker-dcu-local.artifactory.secureserver.net/dcu-mimir
+  newTag: prod
+
+configMapGenerator:
+- literals:
+  - sysenv=prod
+  - REDIS=mimir-redis.abuse-api-prod.svc.cluster.local
+  name: env-specific-values
