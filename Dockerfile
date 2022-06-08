@@ -2,8 +2,6 @@ FROM docker-dcu-local.artifactory.secureserver.net/dcu-python3.7:3.3
 LABEL MAINTAINER="dcueng@godaddy.com"
 
 USER root
-RUN adduser --disabled-password --disabled-login --no-create-home --ingroup dcu --system dcu
-
 # Expose Flask port 5000
 EXPOSE 5000
 

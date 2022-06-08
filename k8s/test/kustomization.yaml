@@ -6,7 +6,7 @@ resources:
 
 namespace: abuse-api-test
 images:
-- name: docker-dcu-local.artifactory.secureserver.net/dcu-mimir
+- name: docker-dcu-local.artifactory.secureserver.net/mimir
   newTag: test
 
 configMapGenerator:

@@ -75,22 +75,16 @@ dev: prep
 
 prod-deploy: prod
 	@echo "----- deploying $(REPONAME) prod -----"
-	docker push $(DOCKERREPO):$(COMMIT)
-	kubectl --context prod-dcu apply -f $(BUILDROOT)/k8s/prod/mimir.deployment.yaml
+	$(call deploy_k8s,prod,$(COMMIT))
+
 
 ote-deploy: ote
 	@echo "----- deploying $(REPONAME) ote -----"
-	docker push $(DOCKERREPO):ote
-	kubectl --context ote-dcu apply -f $(BUILDROOT)/k8s/ote/mimir.deployment.yaml
+	$(call deploy_k8s,ote,ote)
 
 test-deploy: test-env
 	@echo "----- deploying $(REPONAME) test -----"
-	docker push $(DOCKERREPO):test
-	kubectl --context test-dcu apply -f $(BUILDROOT)/k8s/test/mimir.deployment.yaml
-	kubectl --context test-dcu apply -f $(BUILDROOT)/k8s/test/mimir_redis.deployment.yaml
-	kubectl --context test-dcu apply -f $(BUILDROOT)/k8s/test/mimir.service.yaml
-	kubectl --context test-dcu apply -f $(BUILDROOT)/k8s/test/mimir_redis.service.yaml
-	kubectl --context test-dcu apply -f $(BUILDROOT)/k8s/test/mimir.ingress.yaml
+	$(call deploy_k8s,test,test)
 
 dev-deploy: dev
 	@echo "----- deploying $(REPONAME) dev -----"

@@ -6,8 +6,6 @@ resources:
 
 namespace: abuse-api-dev
 images:
-- name: docker-dcu-local.artifactory.secureserver.net/dcu-mimir
-  newTag: dev
 - name: docker-dcu-local.artifactory.secureserver.net/mimir
   newTag: dev
 
