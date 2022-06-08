@@ -8,7 +8,7 @@ dcu-structured-logging-flask==1.0.1
 elastic-apm[flask]==6.7.2
 Flask==2.1.2
 Flask-Cors==3.0.9
-flask-restx==0.5.0
+flask-restx==0.5.1
 itsdangerous==2.0.0
 Jinja2==3.0.0
 jsonschema==3.2.0
