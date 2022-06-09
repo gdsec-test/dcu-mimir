@@ -60,17 +60,14 @@ prod: prep
 
 ote: prep
 	@echo "----- building $(REPONAME) ote -----"
-	sed -ie 's/THIS_STRING_IS_REPLACED_DURING_BUILD/$(DATE)/g' $(BUILDROOT)/k8s/ote/mimir.deployment.yaml
 	docker build -t $(DOCKERREPO):ote $(BUILDROOT)
 
 test-env: prep
 	@echo "----- building $(REPONAME) test -----"
-	sed -ie 's/THIS_STRING_IS_REPLACED_DURING_BUILD/$(DATE)/g' $(BUILDROOT)/k8s/test/mimir.deployment.yaml
 	docker build -t $(DOCKERREPO):test $(BUILDROOT)
 
 dev: prep
 	@echo "----- building $(REPONAME) dev -----"
-	sed -ie 's/THIS_STRING_IS_REPLACED_DURING_BUILD/$(DATE)/g' $(BUILDROOT)/k8s/dev/mimir.deployment.yaml
 	docker build -t $(DOCKERREPO):dev $(BUILDROOT)
 
 prod-deploy: prod

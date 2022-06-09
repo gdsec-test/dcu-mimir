@@ -8,6 +8,9 @@ namespace: abuse-api-prod
 images:
 - name: docker-dcu-local.artifactory.secureserver.net/mimir
   newTag: prod
+replicas:
+  - count: 2
+    name: mimir
 
 configMapGenerator:
 - literals:
