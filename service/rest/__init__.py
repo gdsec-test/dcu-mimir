@@ -4,7 +4,7 @@ from dcustructuredloggingflask.flasklogger import add_request_logging
 from elasticapm.contrib.flask import ElasticAPM
 from flask import Flask
 from flask_cors import CORS
-from flask_restplus import Api
+from flask_restx import Api
 
 from .api import api as ns1
 
