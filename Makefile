@@ -6,6 +6,13 @@ DATE=$(shell date)
 COMMIT=
 BUILD_BRANCH=origin/main
 
+define deploy_k8s
+	docker push $(DOCKERREPO):$(2)
+	cd k8s/$(1) && kustomize edit set image $$(docker inspect --format='{{index .RepoDigests 0}}' $(DOCKERREPO):$(2))
+	kubectl --context $(1)-dcu apply -k k8s/$(1)
+	cd k8s/$(1) && kustomize edit set image $(DOCKERREPO):$(1)
+endef
+
 .PHONY: prep flake8 isort tools test testcov dev stage prod ote clean prod-deploy ote-deploy dev-deploy
 
 all: env
@@ -46,49 +53,37 @@ prod: prep
 	if [[ `git status --porcelain | wc -l` -gt 0 ]] ; then echo "You must stash your changes before proceeding" ; exit 1 ; fi
 	git fetch && git checkout $(BUILD_BRANCH)
 	$(eval COMMIT:=$(shell git rev-parse --short HEAD))
-	sed -ie 's/THIS_STRING_IS_REPLACED_DURING_BUILD/$(DATE)/' $(BUILDROOT)/k8s/prod/mimir.deployment.yaml
-	sed -ie 's/REPLACE_WITH_GIT_COMMIT/$(COMMIT)/' $(BUILDROOT)/k8s/prod/mimir.deployment.yaml
 	docker build -t $(DOCKERREPO):$(COMMIT) $(BUILDROOT)
 	git checkout -
 
 ote: prep
 	@echo "----- building $(REPONAME) ote -----"
-	sed -ie 's/THIS_STRING_IS_REPLACED_DURING_BUILD/$(DATE)/g' $(BUILDROOT)/k8s/ote/mimir.deployment.yaml
 	docker build -t $(DOCKERREPO):ote $(BUILDROOT)
 
 test-env: prep
 	@echo "----- building $(REPONAME) test -----"
-	sed -ie 's/THIS_STRING_IS_REPLACED_DURING_BUILD/$(DATE)/g' $(BUILDROOT)/k8s/test/mimir.deployment.yaml
 	docker build -t $(DOCKERREPO):test $(BUILDROOT)
 
 dev: prep
 	@echo "----- building $(REPONAME) dev -----"
-	sed -ie 's/THIS_STRING_IS_REPLACED_DURING_BUILD/$(DATE)/g' $(BUILDROOT)/k8s/dev/mimir.deployment.yaml
 	docker build -t $(DOCKERREPO):dev $(BUILDROOT)
 
 prod-deploy: prod
 	@echo "----- deploying $(REPONAME) prod -----"
-	docker push $(DOCKERREPO):$(COMMIT)
-	kubectl --context prod-dcu apply -f $(BUILDROOT)/k8s/prod/mimir.deployment.yaml
+	$(call deploy_k8s,prod,$(COMMIT))
+
 
 ote-deploy: ote
 	@echo "----- deploying $(REPONAME) ote -----"
-	docker push $(DOCKERREPO):ote
-	kubectl --context ote-dcu apply -f $(BUILDROOT)/k8s/ote/mimir.deployment.yaml
+	$(call deploy_k8s,ote,ote)
 
 test-deploy: test-env
 	@echo "----- deploying $(REPONAME) test -----"
-	docker push $(DOCKERREPO):test
-	kubectl --context test-dcu apply -f $(BUILDROOT)/k8s/test/mimir.deployment.yaml
-	kubectl --context test-dcu apply -f $(BUILDROOT)/k8s/test/mimir_redis.deployment.yaml
-	kubectl --context test-dcu apply -f $(BUILDROOT)/k8s/test/mimir.service.yaml
-	kubectl --context test-dcu apply -f $(BUILDROOT)/k8s/test/mimir_redis.service.yaml
-	kubectl --context test-dcu apply -f $(BUILDROOT)/k8s/test/mimir.ingress.yaml
+	$(call deploy_k8s,test,test)
 
 dev-deploy: dev
 	@echo "----- deploying $(REPONAME) dev -----"
-	docker push $(DOCKERREPO):dev
-	kubectl --context dev-dcu apply -f $(BUILDROOT)/k8s/dev/mimir.deployment.yaml
+	$(call deploy_k8s,dev,dev)
 
 clean:
 	@echo "----- cleaning $(REPONAME) app -----"

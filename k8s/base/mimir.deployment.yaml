@@ -3,7 +3,6 @@ apiVersion: "apps/v1"
 kind: "Deployment"
 metadata:
   name: "mimir"
-  namespace: "abuse-api-dev"
   labels:
     app: "mimir"
 spec:
@@ -23,8 +22,10 @@ spec:
       containers:
         -
           name: "mimir"
-          imagePullPolicy: "Always"
-          image: "docker-dcu-local.artifactory.secureserver.net/mimir:dev"
+          image: "docker-dcu-local.artifactory.secureserver.net/mimir"
+          envFrom:
+            - configMapRef:
+                name: env-specific-values
           livenessProbe:
             tcpSocket:
               port: 5000
@@ -36,17 +37,11 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 15
           env:
-          - name: BUILD_DATE
-            value: 'THIS_STRING_IS_REPLACED_DURING_BUILD'
-          - name: sysenv
-            value: dev
           - name: DB_PASS
             valueFrom:
               secretKeyRef:
                 name: db-phishstory-v2
                 key: password
-          - name: REDIS
-            value: mimir-redis.abuse-api-dev.svc.cluster.local
           - name: ELASTIC_APM_SERVER_URL
             valueFrom:
               secretKeyRef:
