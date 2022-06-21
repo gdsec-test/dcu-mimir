@@ -1,7 +1,6 @@
 import os
 
-from dcustructuredloggingflask.flasklogger import add_request_logging
-from elasticapm.contrib.flask import ElasticAPM
+from csetutils.flask import instrument
 from flask import Flask
 from flask_cors import CORS
 from flask_restx import Api
@@ -11,8 +10,12 @@ from .api import api as ns1
 
 def create_app(config):
     app = Flask(__name__)
-    apm = ElasticAPM()
-    apm.init_app(app, service_name='mimir', debug=True, environment=os.getenv('sysenv', 'dev'))
+    instrument(app, service_name='mimir', env=os.getenv('sysenv', 'dev'), sso=config.TOKEN_AUTHORITY, excluded_paths=[
+        '/doc',
+        '/swagger',
+        '/v1/health'
+    ])
+
     app.config.SWAGGER_UI_JSONEDITOR = True
     app.config.SWAGGER_UI_DOC_EXPANSION = 'list'
     authorizations = {
@@ -37,9 +40,4 @@ def create_app(config):
     api.add_namespace(ns1)
     CORS(app, origins=['http://localhost:5000', 'http://127.0.0.1:5000', r'^https.*(-|\.)godaddy.com.*$'],
          supports_credentials=True)
-    add_request_logging(app, 'dcu-mimir-api', sso=config.TOKEN_AUTHORITY, excluded_paths=[
-        '/doc',
-        '/swagger',
-        '/v1/health'
-    ])
     return app
