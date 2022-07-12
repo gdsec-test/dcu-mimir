@@ -9,8 +9,18 @@ spec:
     - hosts:
       - "mimir.int.test-godaddy.com"
       secretName: tls-mimir
+    - hosts:
+      - "mimir.cset.int.test-gdcorp.tools"
+      secretName: cset-wildcard
   rules:
   - host: "mimir.int.test-godaddy.com"
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: "mimir"
+          servicePort: 5000
+  - host: "mimir.cset.int.test-gdcorp.tools"
     http:
       paths:
       - path: /
