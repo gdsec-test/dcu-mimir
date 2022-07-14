@@ -9,8 +9,18 @@ spec:
     - hosts:
       - "mimir.int.ote-godaddy.com"
       secretName: tls-mimir
+    - hosts:
+      - "mimir.cset.int.ote-gdcorp.tools"
+      secretName: cset-wildcard
   rules:
   - host: "mimir.int.ote-godaddy.com"
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: "mimir"
+          servicePort: 5000
+  - host: "mimir.cset.int.ote-gdcorp.tools"
     http:
       paths:
       - path: /
