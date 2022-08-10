@@ -15,7 +15,7 @@ class AppConfig(object):
 
 
 class ProductionAppConfig(AppConfig):
-    TOKEN_AUTHORITY = 'sso.godaddy.com'
+    TOKEN_AUTHORITY = 'sso.gdcorp.tools'
     CN_WHITELIST = {'dcu.zeus.int.godaddy.com', 'godaddy-service.int.godaddy.com', 'kelvin.int.godaddy.com'}
     DB = 'phishstory'
     DB_HOST = '10.22.9.209'
@@ -26,7 +26,7 @@ class ProductionAppConfig(AppConfig):
 
 
 class OTEAppConfig(AppConfig):
-    TOKEN_AUTHORITY = 'sso.ote-godaddy.com'
+    TOKEN_AUTHORITY = 'sso.ote-gdcorp.tools'
     CN_WHITELIST = {'dcu.zeus.int.ote-godaddy.com', 'godaddy-service.int.ote-godaddy.com', 'kelvin.int.ote-godaddy.com'}
     DB = 'otephishstory'
     DB_HOST = '10.22.9.209'
@@ -37,7 +37,7 @@ class OTEAppConfig(AppConfig):
 
 
 class DevelopmentAppConfig(AppConfig):
-    TOKEN_AUTHORITY = 'sso.dev-godaddy.com'
+    TOKEN_AUTHORITY = 'sso.dev-gdcorp.tools'
     CN_WHITELIST = {'dcu.zeus.int.dev-godaddy.com', 'godaddy-service.int.dev-godaddy.com', 'kelvin.int.dev-godaddy.com'}
     DB = 'devphishstory'
     DB_HOST = '10.36.190.222'
@@ -48,7 +48,7 @@ class DevelopmentAppConfig(AppConfig):
 
 
 class TestAppConfig(AppConfig):
-    TOKEN_AUTHORITY = 'sso.test-godaddy.com'
+    TOKEN_AUTHORITY = 'sso.test-gdcorp.tools'
     CN_WHITELIST = {'dcu.zeus.int.test-godaddy.com', 'godaddy-service.int.test-godaddy.com', 'kelvin.int.test-godaddy.com'}
     DB = 'testphishstory'
     DB_HOST = '10.36.190.222'
