@@ -2,6 +2,7 @@ import copy
 import logging
 import os
 from functools import wraps
+from typing import Set
 from urllib.parse import urlencode, urlparse, urlunparse
 
 from flask import abort, current_app, request
@@ -9,6 +10,7 @@ from flask_restx import Namespace, Resource, fields, reqparse
 from gd_auth.exceptions import TokenExpiredException
 from gd_auth.token import AuthToken, TokenBusinessLevel
 from redlock import RedLockError
+from requests import get
 
 from service.utils.query_helper import QueryHelper
 from settings import config_by_name
@@ -166,12 +168,26 @@ infractions_response = api.model(
 )
 
 
+def validate_group(token_authority: str, token: str, allowed_groups: Set[str]) -> bool:
+    groups = get(
+        f'https://{token_authority}/v1/api/jomax/my/ad_membership',
+        headers={'Authorization': f'sso-jwt {token}'}
+    )
+    groups.raise_for_status()
+    groups = groups.json()
+
+    approved_groups = set(groups.get('data', {}).get('groups', []))
+    if not approved_groups.intersection(allowed_groups):
+        return False
+    return True
+
+
 def token_required(f):
     @wraps(f)
     def wrapped(*args, **kwargs):
         forbidden = {'message': 'Authenticated user is not allowed access'}, 403
 
-        auth_groups = current_app.config.get('auth_groups')
+        auth_groups: Set[str] = current_app.config.get('auth_groups')
         cn_whitelist = current_app.config.get('cn_whitelist')
 
         token_authority = current_app.config.get('token_authority')
@@ -200,8 +216,7 @@ def token_required(f):
                 return {'message': 'JWT not valid'}, 401
 
             if typ == 'jomax':
-                approved_groups = set(parsed.payload.get('groups', []))
-                if not approved_groups.intersection(auth_groups):
+                if not validate_group(token_authority, token.decode(), auth_groups):
                     return forbidden
             elif typ == 'cert':
                 if parsed.subject.get('cn') not in cn_whitelist:
