@@ -40,7 +40,7 @@ class DevelopmentAppConfig(AppConfig):
     TOKEN_AUTHORITY = 'sso.dev-gdcorp.tools'
     CN_WHITELIST = {'dcu.zeus.int.dev-godaddy.com', 'godaddy-service.int.dev-godaddy.com', 'kelvin.int.dev-godaddy.com', 'zeus.client.cset.int.dev-gdcorp.tools', 'godaddy-service.client.cset.int.dev-gdcorp.tools', 'phishstory.client.cset.int.dev-gdcorp.tools'}
     DB = 'devphishstory'
-    DB_HOST = '10.36.190.222'
+    DB_HOST = 'mongodb.cset.int.dev-gdcorp.tools'
     DB_USER = 'devuser'
 
     def __init__(self):
@@ -51,7 +51,7 @@ class TestAppConfig(AppConfig):
     TOKEN_AUTHORITY = 'sso.test-gdcorp.tools'
     CN_WHITELIST = {'dcu.zeus.int.test-godaddy.com', 'godaddy-service.int.test-godaddy.com', 'kelvin.int.test-godaddy.com', 'zeus.client.cset.int.test-gdcorp.tools', 'godaddy-service.client.cset.int.test-gdcorp.tools', 'phishstory.client.cset.int.test-gdcorp.tools'}
     DB = 'testphishstory'
-    DB_HOST = '10.36.190.222'
+    DB_HOST = 'mongodb.cset.int.dev-gdcorp.tools'
     DB_USER = 'testuser'
 
     def __init__(self):
