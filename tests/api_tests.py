@@ -14,7 +14,7 @@ class MockCertToken:
     subject = {
         'o': '',
         'ou': 'Domain Control Validated',
-        'cn': 'dcu.zeus.int.test-godaddy.com'
+        'cn': 'zeus.client.cset.int.test-gdcorp.tools'
     }
 
     payload = {
