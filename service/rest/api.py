@@ -11,6 +11,7 @@ from gd_auth.exceptions import TokenExpiredException
 from gd_auth.token import AuthToken, TokenBusinessLevel
 from redlock import RedLockError
 from requests import get
+from werkzeug.exceptions import UnprocessableEntity
 
 from service.utils.query_helper import QueryHelper
 from settings import config_by_name
@@ -86,6 +87,7 @@ parser.add_argument('note', type=str, location='args', required=False,
                     help='Any note associated with the infraction')
 parser.add_argument('ncmecReportID', type=str, location='args', required=False,
                     help='ncmecReportID associated with NCMEC Report submission')
+parser.add_argument('ticketId', type=str, location='args', required=False, help='ticket or incident associated with the infraction')
 
 infraction_event = api.model(
     'InfractionEvent', {
@@ -112,19 +114,16 @@ infraction_event = api.model(
 
 non_infraction_event = api.model(
     'NonInfractionEvent', {
-        'infractionType': fields.String(required=False, description='the infraction type', enum=infraction_types),
-        'ticketId': fields.String(require=False, description='ticket or incident associated with the infraction'),
-        'sourceDomainOrIp': fields.String(required=True, description='domain associated with the infraction',
-                                          example='godaddy.com'),
-        'hostedStatus': fields.String(required=False, description='domain hosting status', enum=hosting_status_types),
-        'domainId': fields.String(required=False, description='domain ID for the domain associated with the infraction',
-                                  example='123456'),
-        'hostingGuid': fields.String(required=False, description='hosting guid associated with the infraction',
-                                     example='testguid-test-guid-test-guidtest1234'),
-        'shopperId': fields.String(required=True, description='shopper account associated with the infraction',
-                                   example='abc123'),
+        'sourceDomainOrIp': fields.String(required=False, description='domain associated with the infraction', example='godaddy.com'),
+        'hostingGuid': fields.String(required=False, description='hosting guid associated with the infraction', example='testguid-test-guid-test-guidtest1234'),
+        'domainId': fields.String(required=False, description='domain ID for the domain associated with the infraction', example='123456'),
+        'shopperId': fields.String(required=False, description='shopper account associated with the infraction', example='abc123'),
+        'ticketId': fields.String(required=False, description='ticket or incident associated with the infraction'),
+        'note': fields.String(required=False, description='note associated with the infraction', example='ticket sent to ncmec'),
         KEY_RECORD_TYPE: fields.String(required=True, description='the record type', enum=non_inf_record_types),
-        'abuseType': fields.String(required=True, description='the abuse type', enum=abuse_types)
+        'infractionType': fields.String(required=False, description='the infraction type', enum=infraction_types),
+        'hostedStatus': fields.String(required=False, description='domain hosting status', enum=hosting_status_types),
+        'abuseType': fields.String(required=False, description='the abuse type', enum=abuse_types)
     })
 
 infraction_result = api.model(
@@ -413,6 +412,13 @@ class GetInfractionId(Resource):
 @api.route('/non-infraction', endpoint='non-infraction')
 class NonInfractions(Resource):
     _logger = logging.getLogger(__name__)
+    oneOfFields = [
+        'sourceDomainOrIp',
+        'hostingGuid',
+        'domainId',
+        'shopperId',
+        'ticketId'
+    ]
 
     @api.expect(non_infraction_event)
     @api.marshal_with(non_infraction_result)
@@ -430,11 +436,16 @@ class NonInfractions(Resource):
         data = request.json
 
         try:
+            if not data or all(data.get(x) is None for x in self.oneOfFields):
+                abort(422, f'Must include oneOf: {self.oneOfFields}')
+
             record_id = query_helper.insert_non_infraction(data)
             return {'recordId': str(record_id) if record_id else ''}, 201
         except (KeyError, TypeError, ValueError) as e:
             self._logger.error('Validation error {}: {}'.format(data, e))
             abort(422, e)
+        except UnprocessableEntity as e:
+            raise e
         except Exception as e:
             self._logger.error('Error submitting {}: {}'.format(data, e))
             abort(422, 'Error submitting request')
