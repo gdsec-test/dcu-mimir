@@ -88,6 +88,8 @@ parser.add_argument('note', type=str, location='args', required=False,
 parser.add_argument('ncmecReportID', type=str, location='args', required=False,
                     help='ncmecReportID associated with NCMEC Report submission')
 parser.add_argument('ticketId', type=str, location='args', required=False, help='ticket or incident associated with the infraction')
+parser.add_argument(KEY_RECORD_TYPE, type=str, location='args', required=False, action='append',
+                    help='List containing zero or more of {} infraction types: {}'.format(len(infraction_record_type), infraction_record_type))
 
 infraction_event = api.model(
     'InfractionEvent', {
