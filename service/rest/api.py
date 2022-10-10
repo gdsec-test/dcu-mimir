@@ -49,7 +49,7 @@ abuse_types = ['A_RECORD',
 
 infraction_record_type = 'INFRACTION'
 non_inf_record_types = ['NOTE', 'NCMEC_REPORT']
-hosting_status_types = ['HOSTED', 'REGISTERED']
+hosting_status_types = ['HOSTED', 'REGISTERED', 'FOREIGN']
 
 KEY_INFRACTIONS = 'infractions'
 KEY_INFRACTION_TYPES = 'infractionTypes'
