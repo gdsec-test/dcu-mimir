@@ -1,19 +1,24 @@
 ---
-apiVersion: "networking.k8s.io/v1beta1"
-kind: "Ingress"
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: "mimir"
-  namespace: "abuse-api-test"
+  name: mimir
+  namespace: abuse-api-test
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
 spec:
   tls:
     - hosts:
-      - "mimir.cset.int.test-gdcorp.tools"
+      - mimir.cset.int.test-gdcorp.tools
       secretName: cset-wildcard
   rules:
-  - host: "mimir.cset.int.test-gdcorp.tools"
+  - host: mimir.cset.int.test-gdcorp.tools
     http:
       paths:
       - path: /
+        pathType: Prefix
         backend:
-          serviceName: "mimir"
-          servicePort: 5000
+          service:
+            name: mimir
+            port:
+              number: 5000
