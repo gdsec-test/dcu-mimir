@@ -9,6 +9,11 @@ class AppConfig(object):
     COLLECTION = 'infractions'
     AUTH_GROUPS = {'DCU-Phishstory'}
 
+    def __init__(self):
+        self.DB_PASS = quote(os.getenv('DB_PASS', 'password'))
+        self.CLIENT_CERT = os.getenv("MONGO_CLIENT_CERT", '')
+        self.DBURL = f'mongodb://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}/?authSource={self.DB}&readPreference=primary&directConnection=true&tls=true&tlsCertificateKeyFile={self.CLIENT_CERT}'
+
 
 class ProductionAppConfig(AppConfig):
     TOKEN_AUTHORITY = 'sso.gdcorp.tools'
@@ -16,8 +21,6 @@ class ProductionAppConfig(AppConfig):
     DB = 'phishstory'
     DB_HOST = '10.22.9.209'
     DB_USER = 'sau_p_phishv2'
-    DB_PASS = quote(os.getenv('DB_PASS', 'password'))
-    DBURL = f'mongodb://{DB_USER}:{DB_PASS}@{DB_HOST}/?authSource={DB}'
 
     def __init__(self):
         super(ProductionAppConfig, self).__init__()
@@ -29,8 +32,6 @@ class OTEAppConfig(AppConfig):
     DB = 'otephishstory'
     DB_HOST = '10.22.9.209'
     DB_USER = 'sau_o_phish'
-    DB_PASS = quote(os.getenv('DB_PASS', 'password'))
-    DBURL = f'mongodb://{DB_USER}:{DB_PASS}@{DB_HOST}/?authSource={DB}'
 
     def __init__(self):
         super(OTEAppConfig, self).__init__()
@@ -42,9 +43,6 @@ class DevelopmentAppConfig(AppConfig):
     DB = 'devphishstory'
     DB_HOST = 'mongodb.cset.int.dev-gdcorp.tools'
     DB_USER = 'devuser'
-    DB_PASS = quote(os.getenv('DB_PASS', 'password'))
-    CLIENT_CERT = os.getenv("MONGO_CLIENT_CERT", '')
-    DBURL = f'mongodb://{DB_USER}:{DB_PASS}@{DB_HOST}/?authSource={DB}&readPreference=primary&directConnection=true&tls=true&tlsCertificateKeyFile={CLIENT_CERT}'
 
     def __init__(self):
         super(DevelopmentAppConfig, self).__init__()
@@ -56,9 +54,6 @@ class TestAppConfig(AppConfig):
     DB = 'testphishstory'
     DB_HOST = 'mongodb.cset.int.dev-gdcorp.tools'
     DB_USER = 'testuser'
-    DB_PASS = quote(os.getenv('DB_PASS', 'password'))
-    CLIENT_CERT = os.getenv("MONGO_CLIENT_CERT", '')
-    DBURL = f'mongodb://{DB_USER}:{DB_PASS}@{DB_HOST}/?authSource={DB}&readPreference=primary&directConnection=true&tls=true&tlsCertificateKeyFile={CLIENT_CERT}'
 
     def __init__(self):
         super(TestAppConfig, self).__init__()
