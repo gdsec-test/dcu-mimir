@@ -19,7 +19,7 @@ class ProductionAppConfig(AppConfig):
     TOKEN_AUTHORITY = 'sso.gdcorp.tools'
     CN_WHITELIST = {'zeus.client.cset.int.gdcorp.tools', 'brandservice.client.cset.int.gdcorp.tools', 'phishstory.client.cset.int.gdcorp.tools'}
     DB = 'phishstory'
-    DB_HOST = '10.22.9.209'
+    DB_HOST = 'p3plsocritmdb00-00-f0.prod.phx3.gdg'
     DB_USER = 'sau_p_phishv2'
 
     def __init__(self):
@@ -30,7 +30,7 @@ class OTEAppConfig(AppConfig):
     TOKEN_AUTHORITY = 'sso.ote-gdcorp.tools'
     CN_WHITELIST = {'zeus.client.cset.int.ote-gdcorp.tools', 'brandservice.client.cset.int.ote-gdcorp.tools', 'phishstory.client.cset.int.ote-gdcorp.tools'}
     DB = 'otephishstory'
-    DB_HOST = '10.22.9.209'
+    DB_HOST = 'p3plsocritmdb00-00-f0.prod.phx3.gdg'
     DB_USER = 'sau_o_phish'
 
     def __init__(self):
