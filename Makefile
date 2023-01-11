@@ -51,10 +51,8 @@ prod: prep
 	read -p "About to build production image from $(BUILD_BRANCH) branch. Are you sure? (Y/N): " response ; \
 	if [[ $$response == 'N' || $$response == 'n' ]] ; then exit 1 ; fi
 	if [[ `git status --porcelain | wc -l` -gt 0 ]] ; then echo "You must stash your changes before proceeding" ; exit 1 ; fi
-	git fetch && git checkout $(BUILD_BRANCH)
 	$(eval COMMIT:=$(shell git rev-parse --short HEAD))
 	docker build -t $(DOCKERREPO):$(COMMIT) $(BUILDROOT)
-	git checkout -
 
 ote: prep
 	@echo "----- building $(REPONAME) ote -----"
@@ -70,11 +68,11 @@ dev: prep
 
 prod-deploy: prod
 	@echo "----- deploying $(REPONAME) prod -----"
-	$(call deploy_k8s,prod,$(COMMIT),prod-dcu)
+	$(call deploy_k8s,prod,$(COMMIT),prod-cset)
 
 ote-deploy: ote
 	@echo "----- deploying $(REPONAME) ote -----"
-	$(call deploy_k8s,ote,ote,ote-dcu)
+	$(call deploy_k8s,ote,ote,ote-cset)
 
 test-deploy: test-env
 	@echo "----- deploying $(REPONAME) test -----"
