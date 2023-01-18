@@ -340,7 +340,7 @@ class Infractions(PaginationLinks):
             abort(422, e)
         except RedLockError as e:
             self._logger.error('Error while acquiring the lock {}: {}'.format(data, e))
-            abort(422, 'Error submitting request')
+            abort(503, 'Error submitting request')
         except Exception as e:
             self._logger.error('Error submitting {}: {}'.format(data, e))
             abort(422, 'Error submitting request')
