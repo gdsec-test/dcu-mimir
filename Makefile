@@ -18,8 +18,8 @@ endef
 all: env
 
 env:
-	pip3 install -r test_requirements.txt
-	pip3 install -r requirements.txt
+	pip3 install -r test_requirements.txt --use-pep517
+	pip3 install -r requirements.txt --use-pep517
 
 flake8:
 	@echo "----- Running linter -----"
@@ -33,11 +33,13 @@ tools: flake8 isort
 
 test: tools
 	@echo "----- Running tests -----"
-	nosetests tests
+	@python -m unittest discover tests "*_tests.py"
 
 testcov:
 	@echo "----- Running tests with coverage -----"
-	nosetests tests --with-coverage --cover-erase --cover-package=mimir
+	@coverage run --source=service -m unittest discover tests "*_tests.py"
+	@coverage xml
+	@coverage report
 
 
 prep: tools test

@@ -1,4 +1,4 @@
-FROM docker-dcu-local.artifactory.secureserver.net/dcu-python3.7:3.3
+FROM docker-dcu-local.artifactory.secureserver.net/dcu-python3.11:1.1
 LABEL MAINTAINER="dcueng@godaddy.com"
 
 USER root
