@@ -6,11 +6,11 @@ csetutils[flask, celery]==1.0.8
 dcdatabase==1.8.0
 Flask==2.1.2
 Flask-Cors==3.0.9
-flask-restx==0.5.1
+flask-restx==1.0.3
 itsdangerous==2.0.0
 Jinja2==3.0.0
 jsonschema==3.2.0
-MarkupSafe==2.0.0rc2
+MarkupSafe==2.1.1
 PyAuth==7.2.3
 pycparser==2.20
 pyrsistent==0.17.3
