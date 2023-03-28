@@ -1,10 +1,13 @@
 [tool.tartufo]
 repo-path = "."
 exclude-path-patterns = [
-    'tartufo.*'
+    { path-pattern = 'tartufo.*'}
 ]
 exclude-signatures = [
-    "2384cb55b0a27984252802ea260b449f805cf59a7ef5656b0cb093f3df779fc4",
-    "cf6de9170fc2e02cf7bf22f57e7039802352d3e7ab5436539079ed244d07280a",
-    "1b2d7bebfbd78f9baa6324e8c8aa65b49751624e7c727f8de200a4f697cc9eba"
+    { signature='2384cb55b0a27984252802ea260b449f805cf59a7ef5656b0cb093f3df779fc4', reason='false positive'},
+    { signature='cf6de9170fc2e02cf7bf22f57e7039802352d3e7ab5436539079ed244d07280a', reason='false positive'},
+    { signature='1b2d7bebfbd78f9baa6324e8c8aa65b49751624e7c727f8de200a4f697cc9eba', reason='false positive'},
+    { signature='fc6d313fa1db64a062c334738c0f91d36ebad035ed41161feaf54c6efb993bd7', reason='f-string connection string'},
+    { signature='eeb37d28759325829343b68868a4b0f5d4149a38f0723824439a138b625c91b8', reason='f-string connection string'},
+    { signature='63cbbe28d104a5a517f002967d4982a75e0756ddd04e569322a2ffa9e5d8473d', reason='f-string connection string'}
 ]
