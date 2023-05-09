@@ -20,5 +20,4 @@ redlock==1.2.0
 requests==2.28.1
 six==1.16.0
 uWSGI==2.0.21
-werkzeug==2.2.3
 importlib-metadata<5.0
