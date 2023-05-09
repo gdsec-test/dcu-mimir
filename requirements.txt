@@ -1,14 +1,11 @@
 aniso8601==9.0.1
 attrs==21.2.0
-blinker==1.5
 certifi==2022.12.07
 csetutils[flask, celery]==1.0.8
 dcdatabase==1.8.0
 Flask==2.3.2
 Flask-Cors==3.0.9
 flask-restx==1.0.3
-itsdangerous==2.0.0
-Jinja2==3.0.0
 jsonschema==3.2.0
 MarkupSafe==2.1.1
 PyAuth==7.2.3
