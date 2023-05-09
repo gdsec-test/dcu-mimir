@@ -4,7 +4,7 @@ blinker==1.5
 certifi==2022.12.07
 csetutils[flask, celery]==1.0.8
 dcdatabase==1.8.0
-Flask==2.1.2
+Flask==2.3.2
 Flask-Cors==3.0.9
 flask-restx==1.0.3
 itsdangerous==2.0.0
