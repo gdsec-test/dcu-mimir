@@ -13,25 +13,19 @@ define deploy_k8s
 	cd k8s/$(1) && kustomize edit set image $(DOCKERREPO):$(1)
 endef
 
-.PHONY: prep flake8 isort tools test testcov dev stage prod ote clean prod-deploy ote-deploy dev-deploy
+.PHONY: prep lint unit-test testcov dev stage prod ote clean prod-deploy ote-deploy dev-deploy
 
-all: env
+all: init
 
-env:
+init:
 	pip3 install -r test_requirements.txt --use-pep517
 	pip3 install -r requirements.txt --use-pep517
 
-flake8:
-	@echo "----- Running linter -----"
+lint:
+	python -m isort --atomic --skip .venv .
 	flake8 --config ./.flake8 .
 
-isort:
-	@echo "----- Optimizing imports -----"
-	python -m isort --atomic --skip .venv .
-
-tools: flake8 isort
-
-test: tools
+unit-test: lint
 	@echo "----- Running tests -----"
 	@python -m unittest discover tests "*_tests.py"
 
@@ -42,7 +36,7 @@ testcov:
 	@coverage report
 
 
-prep: tools test
+prep: lint unit-test
 	@echo "----- preparing $(REPONAME) build -----"
 	mkdir -p $(BUILDROOT)/
 	cp -rp ./* $(BUILDROOT)
