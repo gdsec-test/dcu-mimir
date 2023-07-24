@@ -17,7 +17,8 @@ class AppConfig(object):
 
 class ProductionAppConfig(AppConfig):
     TOKEN_AUTHORITY = 'sso.gdcorp.tools'
-    CN_WHITELIST = {'zeus.client.cset.int.gdcorp.tools', 'brandservice.client.cset.int.gdcorp.tools', 'phishstory.client.cset.int.gdcorp.tools'}
+    CN_WHITELIST = {'zeus.client.cset.int.gdcorp.tools', 'brandservice.client.cset.int.gdcorp.tools', 'phishstory.client.cset.int.gdcorp.tools',
+                    'ams.client.cset.int.gdcorp.tools'}
     DB = 'phishstory'
     DB_HOST = 'p3plsocritmdb00-00-f0.prod.phx3.gdg'
     DB_USER = 'sau_p_phishv2'
@@ -28,7 +29,8 @@ class ProductionAppConfig(AppConfig):
 
 class OTEAppConfig(AppConfig):
     TOKEN_AUTHORITY = 'sso.ote-gdcorp.tools'
-    CN_WHITELIST = {'zeus.client.cset.int.ote-gdcorp.tools', 'brandservice.client.cset.int.ote-gdcorp.tools', 'phishstory.client.cset.int.ote-gdcorp.tools'}
+    CN_WHITELIST = {'zeus.client.cset.int.ote-gdcorp.tools', 'brandservice.client.cset.int.ote-gdcorp.tools', 'phishstory.client.cset.int.ote-gdcorp.tools',
+                    'ams.client.cset.int.ote-gdcorp.tools'}
     DB = 'otephishstory'
     DB_HOST = 'p3plsocritmdb00-00-f0.prod.phx3.gdg'
     DB_USER = 'sau_o_phish'
@@ -39,7 +41,8 @@ class OTEAppConfig(AppConfig):
 
 class DevelopmentAppConfig(AppConfig):
     TOKEN_AUTHORITY = 'sso.dev-gdcorp.tools'
-    CN_WHITELIST = {'zeus.client.cset.int.dev-gdcorp.tools', 'brandservice.client.cset.int.dev-gdcorp.tools', 'phishstory.client.cset.int.dev-gdcorp.tools'}
+    CN_WHITELIST = {'zeus.client.cset.int.dev-gdcorp.tools', 'brandservice.client.cset.int.dev-gdcorp.tools', 'phishstory.client.cset.int.dev-gdcorp.tools',
+                    'ams.client.cset.int.dev-gdcorp.tools'}
     DB = 'devphishstory'
     DB_HOST = 'mongodb.cset.int.dev-gdcorp.tools'
     DB_USER = 'devuser'
@@ -50,7 +53,8 @@ class DevelopmentAppConfig(AppConfig):
 
 class TestAppConfig(AppConfig):
     TOKEN_AUTHORITY = 'sso.test-gdcorp.tools'
-    CN_WHITELIST = {'zeus.client.cset.int.test-gdcorp.tools', 'brandservice.client.cset.int.test-gdcorp.tools', 'phishstory.client.cset.int.test-gdcorp.tools'}
+    CN_WHITELIST = {'zeus.client.cset.int.test-gdcorp.tools', 'brandservice.client.cset.int.test-gdcorp.tools', 'phishstory.client.cset.int.test-gdcorp.tools',
+                    'ams.client.cset.int.test-gdcorp.tools'}
     DB = 'testphishstory'
     DB_HOST = 'mongodb.cset.int.dev-gdcorp.tools'
     DB_USER = 'testuser'
