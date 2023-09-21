@@ -6,7 +6,7 @@ resources:
 
 namespace: abuse-api-prod
 images:
-- name: docker-dcu-local.artifactory.secureserver.net/mimir
+- name: gdartifactory1.jfrog.io/docker-dcu-local/mimir
   newTag: prod
 replicas:
 - count: 2

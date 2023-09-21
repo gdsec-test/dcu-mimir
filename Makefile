@@ -1,6 +1,6 @@
 REPONAME=digital-crimes/mimir
 BUILDROOT=$(HOME)/dockerbuild/$(REPONAME)
-DOCKERREPO=docker-dcu-local.artifactory.secureserver.net/mimir
+DOCKERREPO=gdartifactory1.jfrog.io/docker-dcu-local/mimir
 SHELL=/bin/bash
 DATE=$(shell date)
 COMMIT=
