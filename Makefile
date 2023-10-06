@@ -13,7 +13,7 @@ define deploy_k8s
 	cd k8s/$(1) && kustomize edit set image $(DOCKERREPO):$(1)
 endef
 
-.PHONY: prep lint unit-test testcov dev stage prod ote clean prod-deploy ote-deploy dev-deploy
+.PHONY: prep lint unit-test testcov dev stage prod ote clean prod-deploy ote-deploy dev-deploy test-deploy
 
 all: init
 

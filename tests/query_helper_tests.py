@@ -2,6 +2,7 @@ from copy import deepcopy
 from datetime import datetime
 from unittest import TestCase as UnitTestTestCase
 
+import mongomock
 from bson import ObjectId
 from dcdatabase.mimir.mongo import MimirMongo
 from flask_testing.utils import TestCase
@@ -28,8 +29,10 @@ class TestQueryHelper(TestCase, UnitTestTestCase):
     def create_app(self):
         return service.rest.create_app(self.test_config)
 
-    def setUp(self):
+    @patch.object(MimirMongo, '__init__', return_value=None)
+    def setUp(self, mockMimirMongo):
         self._qh = QueryHelper(self.test_config)
+        self._qh._mongo = mongomock.MongoClient()
         self._infraction_obj = {
             'infractionType': self.INFRACTION_TYPE,
             'sourceDomainOrIp': self.DOMAIN,

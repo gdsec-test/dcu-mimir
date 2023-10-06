@@ -1,5 +1,6 @@
 import json
 
+from dcdatabase.mimir.mongo import MimirMongo
 from flask import url_for
 from flask_testing.utils import TestCase
 from gd_auth.token import AuthToken
@@ -47,6 +48,7 @@ class MockJomaxToken:
         return False
 
 
+@patch.object(MimirMongo, '__init__', return_value=None)
 class TestRest(TestCase):
     CHILD_ABUSE = 'CHILD_ABUSE'
     CUSTOMER_WARNING = 'CUSTOMER_WARNING'
@@ -75,7 +77,7 @@ class TestRest(TestCase):
 
     '''Health Endpoint'''
 
-    def test_live_health_endpoint(self):
+    def test_live_health_endpoint(self, mockMimirMongoCon):
         response = self.client.get(url_for('health'), headers={'Content-Type': 'application/json'})
         self.assertEqual(response.status_code, 200)
 
@@ -84,7 +86,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'payload', return_value=MockCertToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockCertToken())
     @patch.object(QueryHelper, 'get_infraction_from_id')
-    def test_infraction_from_id(self, get_infraction_from_id, parse, payload):
+    def test_infraction_from_id(self, get_infraction_from_id, parse, payload, mockMimirMongoCon):
         get_infraction_from_id.return_value = {self.KEY_INFRACTION_ID: '12347', 'infractionType': self.SUSPENDED}
         response = self.client.get(url_for('get_infraction_id', infractionId='12347'), headers=self.HEADERS)
         self.assertEqual(response.status_code, 200)
@@ -96,7 +98,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(service.rest.api, 'validate_group', return_value=True)
     @patch.object(QueryHelper, 'get_infraction_from_id')
-    def test_no_infraction_from_id(self, get_infraction_from_id, validate_group, parse, payload):
+    def test_no_infraction_from_id(self, get_infraction_from_id, validate_group, parse, payload, mockMimirMongoCon):
         get_infraction_from_id.return_value = []
         response = self.client.get(url_for('get_infraction_id', infractionId='12345'), headers=self.HEADERS)
         self.assertEqual(response.status_code, 404)
@@ -108,7 +110,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(service.rest.api, 'validate_group', return_value=True)
     @patch.object(QueryHelper, 'get_infraction_from_id')
-    def test_infraction_id_validation_error(self, get_infraction_from_id, validate_group, parse, payload):
+    def test_infraction_id_validation_error(self, get_infraction_from_id, validate_group, parse, payload, mockMimirMongoCon):
         get_infraction_from_id.side_effect = TypeError()
         response = self.client.get(url_for('get_infraction_id', infractionId='12346'), headers=self.HEADERS)
         self.assertEqual(response.status_code, 422)
@@ -122,7 +124,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(service.rest.api, 'validate_group', return_value=True)
     @patch.object(QueryHelper, 'insert_infraction')
-    def test_insert_new_hosted_infraction(self, insert_infraction, validate_group, parse, payload):
+    def test_insert_new_hosted_infraction(self, insert_infraction, validate_group, parse, payload, mockMimirMongoCon):
         insert_infraction.return_value = '12345', False
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID2, self.KEY_TICKET_ID: '133F', 'sourceDomainOrIp': self.TEST_DOMAIN,
                 'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING,
@@ -137,7 +139,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(service.rest.api, 'validate_group', return_value=True)
     @patch.object(QueryHelper, 'insert_infraction')
-    def test_insert_new_reg_infraction(self, insert_infraction, validate_group, parse, payload):
+    def test_insert_new_reg_infraction(self, insert_infraction, validate_group, parse, payload, mockMimirMongoCon):
         insert_infraction.return_value = '12345', False
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID2, self.KEY_TICKET_ID: '128F', 'sourceDomainOrIp': self.TEST_DOMAIN,
                 'hostedStatus': self.REGISTERED, 'domainId': '1234', 'infractionType': self.CUSTOMER_WARNING,
@@ -152,7 +154,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(service.rest.api, 'validate_group', return_value=True)
     @patch.object(QueryHelper, 'insert_infraction')
-    def test_insert_dupe_infraction(self, insert_infraction, validate_group, parse, payload):
+    def test_insert_dupe_infraction(self, insert_infraction, validate_group, parse, payload, mockMimirMongoCon):
         insert_infraction.return_value = '12345', True
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID2, self.KEY_TICKET_ID: '129F', 'sourceDomainOrIp': self.TEST_DOMAIN,
                 'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING,
@@ -163,14 +165,14 @@ class TestRest(TestCase):
         parse.assert_called()
         payload.assert_called()
 
-    def test_insert_infraction_validation_error(self):
+    def test_insert_infraction_validation_error(self, mockMimirMongoCon):
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID2, self.KEY_TICKET_ID: '130F', 'sourceDomainOrIp': self.TEST_DOMAIN,
                 'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1, 'infractionType': 'Oops',
                 'recordType': 'INFRACTION'}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
         self.assertEqual(response.status_code, 400)
 
-    def test_insert_infraction_when_required_param_missing(self):
+    def test_insert_infraction_when_required_param_missing(self, mockMimirMongoCon):
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID2, self.KEY_TICKET_ID: '131F', 'sourceDomainOrIp': self.TEST_DOMAIN,
                 'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1, 'recordType': 'INFRACTION'}
         response = self.client.post(url_for('infractions'), data=json.dumps(data), headers=self.HEADERS)
@@ -180,7 +182,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(service.rest.api, 'validate_group', return_value=True)
     @patch.object(QueryHelper, 'insert_infraction')
-    def test_insert_infraction_with_note_no_ticket_id(self, insert_infraction, validate_group, parse, payload):
+    def test_insert_infraction_with_note_no_ticket_id(self, insert_infraction, validate_group, parse, payload, mockMimirMongoCon):
         insert_infraction.return_value = '12346', False
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID2, 'sourceDomainOrIp': self.TEST_DOMAIN, 'hostedStatus': self.HOSTED,
                 'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING, 'note': 'manual note',
@@ -195,7 +197,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(service.rest.api, 'validate_group', return_value=True)
     @patch.object(QueryHelper, 'insert_infraction')
-    def test_insert_new_csam_infraction(self, insert_infraction, validate_group, parse, payload):
+    def test_insert_new_csam_infraction(self, insert_infraction, validate_group, parse, payload, mockMimirMongoCon):
         insert_infraction.return_value = '12345', False
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID2, self.KEY_TICKET_ID: '128F',
                 'sourceDomainOrIp': 'test-csam-domain.com', 'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1,
@@ -209,7 +211,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(service.rest.api, 'validate_group', return_value=True)
-    def test_insert_non_infraction_record_type(self, validate_group, parse, payload):
+    def test_insert_non_infraction_record_type(self, validate_group, parse, payload, mockMimirMongoCon):
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID2, self.KEY_TICKET_ID: '133F', 'sourceDomainOrIp': self.TEST_DOMAIN,
                 'hostedStatus': self.HOSTED, 'hostingGuid': self.GUID1, 'infractionType': self.CUSTOMER_WARNING,
                 'abuseType': self.PHISHING, 'recordType': 'NOTE'}
@@ -224,7 +226,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(service.rest.api, 'validate_group', return_value=True)
     @patch.object(QueryHelper, 'insert_non_infraction')
-    def test_insert_non_infraction_with_note(self, insert_infraction, validate_group, parse, payload):
+    def test_insert_non_infraction_with_note(self, insert_infraction, validate_group, parse, payload, mockMimirMongoCon):
         insert_infraction.return_value = '12346', False
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID2, 'recordType': 'NOTE', 'sourceDomainOrIp': self.TEST_DOMAIN,
                 'note': 'manual note', 'abuseType': self.PHISHING}
@@ -238,7 +240,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(service.rest.api, 'validate_group', return_value=True)
     @patch.object(QueryHelper, 'insert_non_infraction')
-    def test_insert_non_infraction_ncmec(self, insert_infraction, validate_group, parse, payload):
+    def test_insert_non_infraction_ncmec(self, insert_infraction, validate_group, parse, payload, mockMimirMongoCon):
         insert_infraction.return_value = '12346', False
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID2, 'recordType': 'NCMEC_REPORT',
                 'sourceDomainOrIp': self.TEST_DOMAIN, 'note': 'manual note', 'abuseType': self.PHISHING}
@@ -248,7 +250,7 @@ class TestRest(TestCase):
         parse.assert_called()
         payload.assert_called()
 
-    def test_insert_non_infraction_required_param_missing(self):
+    def test_insert_non_infraction_required_param_missing(self, mockMimirMongoCon):
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID2, 'sourceDomainOrIp': self.TEST_DOMAIN,
                 'note': 'manual note', 'abuseType': self.PHISHING}
         response = self.client.post(url_for('non-infraction'), data=json.dumps(data), headers=self.HEADERS)
@@ -260,7 +262,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(service.rest.api, 'validate_group', return_value=True)
     @patch.object(QueryHelper, 'get_history')
-    def test_get_matching_hosted_history(self, get_history, validate_group, parse, payload):
+    def test_get_matching_hosted_history(self, get_history, validate_group, parse, payload, mockMimirMongoCon):
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1}
         get_history.return_value = [
             {self.KEY_INFRACTION_ID: '5c5cc2b85f627d8562e7f1f3', self.KEY_SHOPPER_ID: self.SHOPPER_ID1,
@@ -277,7 +279,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(service.rest.api, 'validate_group', return_value=True)
     @patch.object(QueryHelper, 'get_history')
-    def test_get_history_with_infraction_type(self, get_history, validate_group, parse, payload):
+    def test_get_history_with_infraction_type(self, get_history, validate_group, parse, payload, mockMimirMongoCon):
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1, 'infractionTypes': [self.CUSTOMER_WARNING, self.SUSPENDED]}
         get_history.return_value = [
             {self.KEY_INFRACTION_ID: '5c5cc2b85f627d8562e7f1f3', self.KEY_SHOPPER_ID: self.SHOPPER_ID1,
@@ -297,7 +299,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(service.rest.api, 'validate_group', return_value=True)
     @patch.object(QueryHelper, 'get_history')
-    def test_get_matching_reg_history(self, get_history, validate_group, parse, payload):
+    def test_get_matching_reg_history(self, get_history, validate_group, parse, payload, mockMimirMongoCon):
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1, 'hostedStatus': self.REGISTERED}
         get_history.return_value = [
             {self.KEY_INFRACTION_ID: '5c5cc2b85f627d8562e7f1f3', self.KEY_SHOPPER_ID: self.SHOPPER_ID1,
@@ -314,7 +316,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(service.rest.api, 'validate_group', return_value=True)
     @patch.object(QueryHelper, 'get_history')
-    def test_get_no_matching_history(self, get_history, validate_group, parse, payload):
+    def test_get_no_matching_history(self, get_history, validate_group, parse, payload, mockMimirMongoCon):
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1}
         get_history.return_value = []
         response = self.client.get(url_for('history'), headers=self.HEADERS, query_string=data)
@@ -327,7 +329,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(service.rest.api, 'validate_group', return_value=True)
     @patch.object(QueryHelper, 'get_history')
-    def test_get_no_matching_history_error(self, get_history, validate_group, parse, payload):
+    def test_get_no_matching_history_error(self, get_history, validate_group, parse, payload, mockMimirMongoCon):
         data = {'infractionTypes': 'IT_BAD'}
         get_history.side_effect = TypeError()
         response = self.client.get(url_for('history'), headers=self.HEADERS, query_string=data)
@@ -340,7 +342,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(service.rest.api, 'validate_group', return_value=True)
     @patch.object(QueryHelper, 'get_history')
-    def test_get_history_type_error(self, get_history, validate_group, parse, payload):
+    def test_get_history_type_error(self, get_history, validate_group, parse, payload, mockMimirMongoCon):
         data = {'infractionTypes': 'INTENTIONALLY_MALICIOUS', self.KEY_SHOPPER_ID: self.SHOPPER_ID1}
         get_history.side_effect = TypeError()
         response = self.client.get(url_for('history'), headers=self.HEADERS, query_string=data)
@@ -353,7 +355,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(service.rest.api, 'validate_group', return_value=True)
     @patch.object(QueryHelper, 'get_history')
-    def test_get_none_infraction_type(self, get_history, validate_group, parse, payload):
+    def test_get_none_infraction_type(self, get_history, validate_group, parse, payload, mockMimirMongoCon):
         data = {'infractionTypes': None}
         get_history.side_effect = TypeError()
         response = self.client.get(url_for('history'), headers=self.HEADERS, query_string=data)
@@ -366,7 +368,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(service.rest.api, 'validate_group', return_value=True)
     @patch.object(QueryHelper, 'get_history')
-    def test_get_infraction_count_less_than_limit(self, get_history, validate_group, parse, payload):
+    def test_get_infraction_count_less_than_limit(self, get_history, validate_group, parse, payload, mockMimirMongoCon):
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1}
         response = self.client.get(url_for('history'), headers=self.HEADERS, query_string=data)
         self.assertIsNone(response.json.get(self.KEY_PAGINATION, {}).get(self.KEY_NEXT))
@@ -378,7 +380,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(service.rest.api, 'validate_group', return_value=True)
     @patch.object(QueryHelper, 'get_history')
-    def test_history_pagination_invalid_prev_url(self, get_history, validate_group, parse, payload):
+    def test_history_pagination_invalid_prev_url(self, get_history, validate_group, parse, payload, mockMimirMongoCon):
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1, 'offset': 0, 'limit': 2}
         get_history.return_value = [
             {self.KEY_INFRACTION_ID: '1', self.KEY_SHOPPER_ID: self.SHOPPER_ID1, self.KEY_TICKET_ID: '1234'},
@@ -399,7 +401,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(service.rest.api, 'validate_group', return_value=True)
     @patch.object(QueryHelper, 'get_history')
-    def test_history_pagination_valid_prev_url(self, get_history, validate_group, parse, payload):
+    def test_history_pagination_valid_prev_url(self, get_history, validate_group, parse, payload, mockMimirMongoCon):
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1, 'offset': 3, 'limit': 2}
         get_history.return_value = [
             {self.KEY_INFRACTION_ID: '1', self.KEY_SHOPPER_ID: self.SHOPPER_ID1, self.KEY_TICKET_ID: '1334'},
@@ -422,7 +424,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(service.rest.api, 'validate_group', return_value=True)
     @patch.object(QueryHelper, 'count_infractions')
-    def test_count_infractions_pass_nonzero_count(self, count_infractions, validate_group, parse, payload):
+    def test_count_infractions_pass_nonzero_count(self, count_infractions, validate_group, parse, payload, mockMimirMongoCon):
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1}
         count_infractions.return_value = 12
         response = self.client.get(url_for('infraction_count'), headers=self.HEADERS, query_string=data)
@@ -436,7 +438,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(service.rest.api, 'validate_group', return_value=True)
     @patch.object(QueryHelper, 'count_infractions')
-    def test_count_infractions_pass_zero_count(self, count_infractions, validate_group, parse, payload):
+    def test_count_infractions_pass_zero_count(self, count_infractions, validate_group, parse, payload, mockMimirMongoCon):
         data = {self.KEY_SHOPPER_ID: self.SHOPPER_ID1}
         count_infractions.return_value = 0
         response = self.client.get(url_for('infraction_count'), headers=self.HEADERS, query_string=data)
@@ -449,7 +451,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'payload', return_value=MockJomaxToken.payload)
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(service.rest.api, 'validate_group', return_value=True)
-    def test_count_infractions_fail_empty_query(self, validate_group, parse, payload):
+    def test_count_infractions_fail_empty_query(self, validate_group, parse, payload, mockMimirMongoCon):
         response = self.client.get(url_for('infraction_count'), headers=self.HEADERS, query_string={})
         self.assertEqual(response.status_code, 422)
         parse.assert_called()
@@ -459,7 +461,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(service.rest.api, 'validate_group', return_value=True)
     @patch.object(QueryHelper, 'count_infractions')
-    def test_count_infractions_pass_unknown_key_query(self, count_infractions, validate_group, parse, payload):
+    def test_count_infractions_pass_unknown_key_query(self, count_infractions, validate_group, parse, payload, mockMimirMongoCon):
         data = {'unknownKey': 'Value for Unknown Key', self.KEY_SHOPPER_ID: self.SHOPPER_ID1}
         count_infractions.return_value = 12
         response = self.client.get(url_for('infraction_count'), headers=self.HEADERS, query_string=data)
@@ -473,7 +475,7 @@ class TestRest(TestCase):
     @patch.object(AuthToken, 'parse', return_value=MockJomaxToken())
     @patch.object(service.rest.api, 'validate_group', return_value=True)
     @patch.object(QueryHelper, 'count_infractions')
-    def test_count_infractions_fail_type_error(self, count_infractions, validate_group, parse, payload):
+    def test_count_infractions_fail_type_error(self, count_infractions, validate_group, parse, payload, mockMimirMongoCon):
         data = {'infractionTypes': 'INTENTIONALLY_MALICIOUS', self.KEY_SHOPPER_ID: self.SHOPPER_ID1}
         count_infractions.side_effect = TypeError()
         response = self.client.get(url_for('infraction_count'), headers=self.HEADERS, query_string=data)

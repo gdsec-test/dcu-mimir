@@ -19,7 +19,15 @@ from settings import config_by_name
 env = os.getenv('sysenv', 'dev')
 settings = config_by_name[env]()
 
-query_helper = QueryHelper(settings)
+__query_helper = None
+
+
+def get_query_helper():
+    global __query_helper
+    if not __query_helper:
+        __query_helper = QueryHelper(settings)
+    return __query_helper
+
 
 api = Namespace('v1', title='DCU Repeat Infractions API', description='')
 
@@ -331,7 +339,8 @@ class Infractions(PaginationLinks):
             abort(400, message)
 
         try:
-            infraction_id, duplicate = query_helper.insert_infraction(data)
+            qh = get_query_helper()
+            infraction_id, duplicate = qh.insert_infraction(data)
 
             status = 200 if duplicate else 201
             return {'infractionId': str(infraction_id) if infraction_id else ''}, status
@@ -369,7 +378,8 @@ class InfractionCount(Resource):
         infraction_count = 0
         try:
             if args:
-                infraction_count = query_helper.count_infractions(args)
+                qh = get_query_helper()
+                infraction_count = qh.count_infractions(args)
             else:
                 raise Exception('No parameters provided in query')
 
@@ -399,7 +409,8 @@ class GetInfractionId(Resource):
         """
         query = None
         try:
-            query = query_helper.get_infraction_from_id(infractionId)
+            qh = get_query_helper()
+            query = qh.get_infraction_from_id(infractionId)
 
         except Exception as e:
             self._logger.warning('Error fetching {}: {}'.format(infractionId, e))
@@ -441,7 +452,8 @@ class NonInfractions(Resource):
             if not data or all(data.get(x) is None for x in self.oneOfFields):
                 abort(422, f'Must include oneOf: {self.oneOfFields}')
 
-            record_id = query_helper.insert_non_infraction(data)
+            qh = get_query_helper()
+            record_id = qh.insert_non_infraction(data)
             return {'recordId': str(record_id) if record_id else ''}, 201
         except (KeyError, TypeError, ValueError) as e:
             self._logger.error('Validation error {}: {}'.format(data, e))
@@ -484,7 +496,8 @@ class History(PaginationLinks):
 
         response_dict = {}
         try:
-            response_dict[KEY_INFRACTIONS] = query_helper.get_history(args)
+            qh = get_query_helper()
+            response_dict[KEY_INFRACTIONS] = qh.get_history(args)
             response_dict[KEY_PAGINATION] = self._create_paginated_links(input_args)
 
         except Exception as e:

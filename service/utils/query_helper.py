@@ -15,6 +15,7 @@ class QueryHelper:
     TTL expires. The TTL value is in milliseconds.
     """
     TTL = 10000
+    mongo = None
 
     def __init__(self, settings):
         self.mongo = MimirMongo(settings.DBURL, settings.DB, settings.COLLECTION)
